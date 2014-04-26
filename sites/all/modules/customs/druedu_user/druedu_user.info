@@ -1,0 +1,6 @@
+name =  Druedu User Managemnet
+description = Organic Groups memebers admin plus.
+core = 7.x
+package = Druedu
+version = "7.x-1.x-dev"
+configure = admin/people/advanced_membership_management

@@ -1,0 +1,717 @@
+<?php
+
+/**
+ * druedu_notifications_team provides a GUI for subscribing to content
+ *
+ * KNOWN ISSUE: Any users not available to the UI will be unsubscribed from
+ *              content they may subscribe to using some other method.
+ */
+
+/**
+ * Implements hook_menu()
+ */
+function druedu_notifications_team_menu() {
+  $items = array();
+  $items['druedu_notifications_team/autocomplete'] = array(
+    'title' => 'druedu_notifications_team autocomplete',
+    'page callback' => 'druedu_notifications_team_autocomplete',
+    'access arguments' => array('subscribe other users'),
+    'type' => MENU_CALLBACK
+  );
+  $items['admin/config/messaging/subscriptions/team_ui'] = array(
+    'title' => 'Team UI',
+    'description' => 'Team UI settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('druedu_notifications_team_ui_settings_form'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_LOCAL_TASK,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_permission()
+ */
+function druedu_notifications_team_permission() {
+  return array(
+    'subscribe other users' => array(
+      'title' => t('Subscribe other users'),
+      'description' => t('Create subscriptions for other users.')
+    ),
+    'unsubscribe other users' => array(
+      'title' => t('Unsubscribe other users'),
+      'description' => t('Delete subscriptions for other users.')
+    ),
+  );
+}
+
+/**
+ * Get list of users from predefined view
+ */
+function druedu_notifications_team_get_users(&$args = array(), $limit = 0, $simple = FALSE) {
+  $result = array();
+
+  $view_name = variable_get('druedu_notifications_team_user_view', 'druedu_notifications_team_users');
+  if ($view = views_get_view($view_name)) {
+    $view->set_display('default');
+    $view->preview = TRUE;
+    $view->pre_execute($args);
+    $view->set_items_per_page($limit);
+    // Preview the view.
+    $output = $view->display_handler->preview();
+
+    $view->post_execute();
+    if ($simple) {
+      foreach ($view->result as $res) {
+        $res = (array)$res;
+        $result[array_shift($res)] = array_pop($res);
+      }
+    }
+    elseif (isset($view->style_plugin)) {
+      foreach ($view->style_plugin->rendered_fields as $res) {
+        $result[array_shift($res)] = array_pop($res);
+      }
+    }
+  }
+  return $result;
+}
+
+/**
+ * Get existing subscriptions for a node, indexed by uid
+ */
+function druedu_notifications_team_get_subscriptions($nid, $reset = FALSE) {
+  static $subscriptions;
+
+  if (!isset($subscriptions[$nid]) || $reset) {
+    $subscriptions[$nid] = array();
+    $params = array('type' => 'content_thread');
+    $conditions = array('node:nid' => $nid);
+    $_subscriptions = notifications_get_subscriptions($params, $conditions, TRUE, 'uid');
+    foreach ($_subscriptions as $sub) {
+      $subscriptions[$nid][$sub->uid] = $sub->uid;
+    }
+  }
+  return $subscriptions[$nid];
+}
+
+/**
+ * Implements hook_comment_insert().
+ */
+// function druedu_notifications_team_comment_insert($comment) {
+//   _druedu_notifications_team_comment($comment);
+// }
+
+/**
+ * Implements hook_comment_update().
+ */
+// function druedu_notifications_team_comment_update($comment) {
+//   _druedu_notifications_team_comment($comment);
+// }
+
+/**
+ * Implements hook_comment_*().
+ * Acts as a pseudo-submit handler for the notifications team UI on the
+ * comment form to avoid submit handler clashes with other modules (in
+ * particular, comment_upload).
+ */
+// function _druedu_notifications_team_comment($comment) {
+//   // Only run if the druedu_notifications_team key is actually set.
+//   if (isset($comment->druedu_notifications_team)) {
+//     $uids =  explode(',', $comment->druedu_notifications_team['selected']);
+
+//     if (isset($comment->druedu_notifications_team['listed'])) {
+//       $textunames = explode(',', $comment->druedu_notifications_team['listed']);
+//       foreach ($textunames as $uname) {
+//         $uid = db_query("SELECT uid FROM {users} WHERE name = :uname", array(':uname' => trim($uname)));
+//         if ($uid !== FALSE && $uid !== NULL) {
+//           $uids[] = $uid;
+//         }
+//       }
+//     }
+
+//     $nid = $comment->nid;
+//     druedu_notifications_team_update($nid, $uids, empty($comment->notifications_content_disable));
+//   }
+// }
+
+/**
+ * Implements hook_node_update().
+ */
+function druedu_notifications_team_node_update($node) {
+  _druedu_notifications_team_node($node);
+}
+
+/**
+ * Implements hook_node_insert().
+ */
+// function druedu_notifications_team_node_insert($node) {
+//   _druedu_notifications_team_node($node);
+// }
+
+/**
+ * Implements hook_node_*().
+ *
+ * TODO Use notifications_ui_notifications('event trigger'...) and not hook_nodeapi. This would allow us to
+ * unify subscriptions processing for both nodes and comments into one place. ie we wouldn't need druedu_notifications_team_form_submit()
+ */
+function _druedu_notifications_team_node(&$node) {
+  // if (isset($node->druedu_notifications_team)) {
+  //   $new_uids =  explode(',', $node->druedu_notifications_team['selected']);
+  //   if (isset($node->druedu_notifications_team['listed'])) {
+  //     $textunames = explode(',', $node->druedu_notifications_team['listed']);
+  //     foreach ($textunames as $uname) {
+  //       $u = db_fetch_object(db_query("SELECT uid FROM {users} WHERE name = :uname", array(':uname' => trim($uname))));
+  //       if ($u) {
+  //         $new_uids[] = $u->uid;
+  //       }
+  //     }
+  //   }
+
+  //   druedu_notifications_team_update($node->nid, $new_uids, empty($node->notifications_content_disable));
+  // }
+
+  // Only run if the notifications_team key is actually set.
+  if (isset($node->notifications_team_all)) {
+    $uids =  $node->notifications_team_all;
+      //only choose the selected one,value!=0
+      foreach ($uids as $key => $value) {
+        if(!empty($value)) {
+          $new_uids[$key] = $value;
+        }
+    }
+    druedu_notifications_team_update($node->nid, $new_uids, empty($node->notifications_content_disable));
+  }
+
+}
+/**
+ * Update subscriptions for a node.
+ *
+ * @param $nid
+ *  node id
+ * @param $new_uids
+ *  ids of users to subscribe to the node.
+ */
+function druedu_notifications_team_update($nid, $new_uids, $displaymsg = FALSE, $reset = FALSE) {
+  global $user;
+  // Get and wipe existing subs for this thread
+  $subscriptions = druedu_notifications_team_get_subscriptions($nid, $reset);
+  // $allowed = druedu_notifications_team_get_users();
+  //$allowed = notifications_team_get_users();
+  {//get default users allow to be notificated.
+    $node = node_load($nid);
+    $default = druedu_notifications_team_default_grades_select($node, FALSE, TRUE);
+    $gid = $default['default_grades'];
+    unset($gid['_none']);
+    $gids = array_keys($gid);
+    $default_users = druedu_user_get_users_by_groups($gids);
+    foreach ($default_users as $key => $default_user) {
+      $default_user = user_load($key);
+      if(!node_access('view', $node, $default_user)) {
+        unset($default_users[$key]);
+      }
+    }
+  }
+  $allowed = $default_users;
+
+  // Create subscriptions
+  $doneuids = array();
+  $count = 0;
+  // Template subscription
+  $template = array(
+    'type' => 'content_thread',
+    // 'event_type' => 'node',
+    'fields' => array('node:nid' => $nid),
+  );
+  $node = node_load($nid);
+  foreach ($new_uids as $uid) {
+    if (is_numeric($uid)) {
+      if (in_array($uid, $doneuids)) {
+        continue;
+      }
+      $doneuids[] = $uid;
+      $result = TRUE;
+      if (!empty($subscriptions[$uid])) {
+        // We don't change existing subscriptions, just create new ones
+        unset($subscriptions[$uid]);
+      }
+      // Only allow for subscribing users who have permission.
+      elseif (isset($allowed[$uid])) {
+        $subscription = notifications_subscription('content_thread')
+          ->instance()
+          ->set_user(user_load($uid))
+          ->set_node($node);
+        notifications_save_subscription($subscription);
+      }
+      else {
+        $result = FALSE;
+      }
+      if ($result && $user->uid != $uid) {
+        $count++;
+      }
+    }
+  }
+
+  $unsubscribe = user_access('unsubscribe other users');
+  // Delete all the subscriptins that were not 'revalidated'
+  if (is_array($subscriptions)) {
+    foreach ($subscriptions as $subs) {
+      if ($unsubscribe || $subs == $user->uid) {
+        Notifications_Subscription::delete_multiple(array('uid' => $subs), array('node:nid' => $node->nid), FALSE);
+      }
+    }
+  }
+  if ($count > 0 && $displaymsg) {
+    drupal_set_message(format_plural($count, "1 other user has been notified.", "@count other users have been notified."));
+  }
+}
+
+/**
+ * Move druedu_notifications_team_node_type_form_alter() to the end of the list.
+ *
+ * @param $implementations
+ * @param $hook
+ */
+function druedu_notifications_team_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'form_alter') {
+    $module = 'druedu_notifications_team';
+    $group = FALSE;
+    if (isset($implementations[$module])) {
+      $group = $implementations[$module];
+      unset($implementations[$module]);
+    }
+    $implementations[$module] = $group;
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Per content-type notifications options
+ */
+function druedu_notifications_team_form_node_type_form_alter(&$form, $form_state) {
+  module_load_include('admin.inc', 'notifications_ui');
+  // Just in case we want to add more settings here
+  $form['notifications']['druedu_notifications_team_type'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Team UI'),
+    '#default_value' => druedu_notifications_team_node_options($form['#node_type']->type),
+    '#options' => array(
+      'node' => t('<strong>In node form</strong>. A Team UI subform will be available when creating or editing nodes.'),
+      'comment' => t('<strong>In comment form</strong>. A Team UI subform will be available when posting comments.'),
+    ),
+    '#description' => t('Enable different display options for Team UI subscription forms.'),
+  );
+  if (!variable_get('druedu_notifications_team_per_type', 0)) {
+    $form['notifications']['druedu_notifications_team_type']['#disabled'] = TRUE;
+    $form['notifications']['druedu_notifications_team_type']['#description'] .= ' <strong>' . t('To enable these options check the <a href="@notifications-team-settings">Notifications Team settings</a>', array('@notifications-team-settings' => url('admin/config/messaging/subscriptions/team_ui'))) . '</strong>';
+  }
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ *
+ * Adds the druedu_notifications_team_form and it's submission handler.
+ */
+// function druedu_notifications_team_form_comment_form_alter(&$form, &$form_state, $form_id) {
+//   if (user_access('subscribe other users')) {
+//     $node = $form['#node'];
+//     _druedu_notifications_team_addform($form, $node->type, 'comment', $node->nid);
+//   }
+// }
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ *
+ * Adds the druedu_notifications_team_form and it's submission handler.
+ */
+function druedu_notifications_team_form_node_form_alter(&$form, &$form_state, $form_id) {
+  // $form['#validate'][] = 'druedu_notifications_team_form_node_form_alter_validation';
+  if (user_access('subscribe other users')) {
+    if (isset($form['type']) && (($form['nid']['#value'] && notifications_event_enabled('node', 'update')) || (!$form['nid']['#value'] && notifications_event_enabled('node', 'insert')))
+    ) {
+      // _druedu_notifications_team_addform($form, $form['type']['#value'], 'node', $form['nid']['#value']);
+      
+      $node = $form['#node'];
+      $op = 'view';
+      //don't send notifications when create.
+      if(!isset($node->nid)){
+        $op = 'create';
+      }
+      //#454: notification_default_grades_select for node_add_form ,there is no node exists here.
+      //node_access can use node_type as Parameter when create(no node exsits),so we can do it.
+      _druedu_notifications_team_addform($form, $form['type']['#value'], 'node', $form['nid']['#value'], $form_state, $op);
+      
+      $form['#attached']['js'][] = drupal_get_path('module', 'druedu_notifications_team') .'/druedu_notifications_team_ui.js';
+      
+      // if (isset($form_state['node_preview'])) {
+      //   $form['notifications']['druedu_notifications_team']['selected']['#default_value'] = $form_state['values']['druedu_notifications_team']['selected'];
+      // }
+    }
+  }     
+}
+function druedu_notifications_team_form_comment_form_alter(&$form, $form_state) {
+  $form['notifications']['notifications_content_disable']['#default_value'] = TRUE;
+  $form['notifications']['#access'] = FALSE;
+}
+/**
+ * Notifications Team UI settings form.
+ *
+ * @return array
+ */
+function druedu_notifications_team_ui_settings_form() {
+  $form['druedu_notifications_team_max_options'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Max Checkboxes'),
+    '#default_value' => variable_get('druedu_notifications_team_max_options', 20),
+    '#description'   => t('Maximum number of available users to show as individual checkboxes before using autocomplete form.'),
+  );
+
+  $views = array();
+  $all_views = views_get_all_views();
+  foreach ($all_views as $view) {
+    // Only 'users' views that have fields will work for our purpose.
+    if ($view->base_table == 'users' && !empty($view->display['default']->display_options['fields'])) {
+      if ($view->type == 'Default') {
+        $views[t('Default Views')][$view->name] = $view->name;
+      }
+      else {
+        $views[t('Existing Views')][$view->name] = $view->name;
+      }
+    }
+  }
+
+  $form['druedu_notifications_team_user_view'] = array(
+     '#title' => t('View for user selection'),
+     '#type' => 'select',
+     '#options' => $views,
+     '#default_value' => variable_get('druedu_notifications_team_user_view', ''),
+     '#description' => t('Choose the view for the list of available users. This view must have at least <i>user id</i> and <i>name</i> fields, with uid being the first field and the name to display being the last. The first argument should be for the autocomplete string, the second for a list of user ids to show (for subscribed ids). The wildcard for the autocomplete argument must be *. Any other arguments will be set and passed onto the autocomplete callback to ensure consistency, so do not use filters for this purpose. Look at !view as an example or starting point.', array('!view' => 'druedu_notifications_team_users')),
+  );
+
+  $form['form_displays'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Team UI Display'),
+    '#collapsible' => TRUE,
+    '#description' => t('You can use the global settings here or set different options for each content type. In the second case these will be the defaults for new content types.'),
+  );
+
+  $form['form_displays']['druedu_notifications_team_per_type'] = array(
+    '#type' => 'radios',
+    '#default_value' => variable_get('druedu_notifications_team_per_type', 0),
+    '#options' => array(
+      t('Use global settings on this page for all enabled content types.'),
+      t('Set up for each content type on <a href="@content-type-settings">Administer Content Types</a>.', array('@content-type-settings' => url('admin/structure/types'))),
+    ),
+  );
+
+  $form['form_displays']['druedu_notifications_team_options'] = array(
+    '#title' => t('Global settings'),
+    '#type' => 'checkboxes',
+    '#default_value' => variable_get('druedu_notifications_team_options', array('node', 'comment')),
+    '#options' => array(
+      'node' => t('<strong>In node form</strong>. A Team UI subform will be available when creating or editing nodes.'),
+      'comment' => t('<strong>In comment form</strong>. A Team UI subform will be available when posting comments.'),
+    ),
+    '#description' => t('Enable different display options for Team UI subscription forms.'),
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * function notification_default_grades_select
+ * arguments :
+ * $node : node object
+ * $required : Bool , if FALSE add on the return array in key ['_none'] = "all grade"
+ * return array : key [default_grades] => default grades, key [default_users] => default user (only available if param $return_user is set to TRUE)
+ */
+function druedu_notifications_team_default_grades_select($node, $required = FALSE, $return_user = FALSE, $op = 'view') {
+  global $user;
+  $users = user_load_multiple(null, array('status' => '1'));
+  $default_grades = array();
+  if(!$required) {
+    $default_grades['_none'] = t('All grades');
+  }
+  if(isset($users[$user->uid])) {
+    //unset($users[$user->uid]);
+  }
+  if(!isset($node->nid)) {
+    $op = 'create';
+    $node = $node->type;
+  }
+  foreach ($users as $key => $default_user) {
+    if(node_access($op, $node, $default_user)) {
+      $default_users[$key] = $default_user->name;
+      $og_groups = og_get_groups_by_user($default_user, 'node');
+      $grades = node_load_multiple(NULL, array('type' => 'grade'));
+      foreach ($grades as $key => $grade) {
+
+        if($og_groups && in_array($key, $og_groups) && !isset($default_grades[$key])) {
+          $default_grades[$key] = $grade->title;
+        }
+      }
+    }
+  }
+  $return['default_grades'] = $default_grades;
+  if($return_user) $return['default_users'] = $default_users;
+  return $return;
+}
+
+function druedu_notifications_team_form_filters_callback($form, &$form_state){  
+  $commands = array();   
+  //$commands[] = ajax_command_replace('#wrapper_action_submit', drupal_render($form['actions']['submit']));
+  $commands[] = ajax_command_replace('#wrapper_filter_user', drupal_render($form['notifications']['filters']['notifications_team_filter']));
+  //$commands[] = ajax_command_invoke(NULL, 'you_function_name');
+  return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+/**
+ * Helper function adds new ui elements, and - if needed - submit hook.
+ *
+ * @param $form
+ *   The form api form array.
+ * @param $nid
+ *   Node id of the node to be subscribed to.
+ * @param $node_type
+ *   Type of node, used to determine if subs are active.
+ * @param $location
+ *   Form_alter location - either 'node' or 'comment'.
+ */
+// function _druedu_notifications_team_addform(&$form, $node_type, $location = 'node', $nid = NULL) {
+//   // Check to see it thread subscriptions are active for this content type.
+//   if (notifications_content_type_enabled($node_type, 'content_thread') && druedu_notifications_team_node_options($node_type, $location)) {
+//     $subscriptions_form = druedu_notifications_team_form($nid);
+//     if (count($subscriptions_form)) {
+//       if (isset($form['notifications'])) {
+//         $form['notifications'] = array_merge($form['notifications'], $subscriptions_form);
+//       }
+//       else {
+//         // We need to add the full notifications fieldset
+//         $form['notifications'] = $subscriptions_form;
+//         $form['notifications']['#type'] = 'fieldset';
+//         $form['notifications']['#title'] = t('Notifications');
+//         $form['notifications']['#collapsible'] = TRUE;
+//       }
+//     }
+//   }
+// }
+
+function _druedu_notifications_team_addform(&$form, $node_type, $location = 'node', $nid = NULL, &$form_state, $op='view') {
+  // Check to see it thread subscriptions are active for this content type.
+  if(notifications_content_type_enabled($node_type, 'content_thread') && druedu_notifications_team_node_options($node_type, $location)) {
+    global $user;
+    $node = $form['#node'];
+    if(!isset($node->nid)) {
+      $op = 'create';
+    }
+    $default = druedu_notifications_team_default_grades_select($node, FALSE, TRUE, $op);
+
+    $og_groups = og_context();
+    $form_state['all_grades'] = $default['default_grades'];
+
+    $user_preferences = druedu_get_user_preferences($user->uid);
+    $user_preferences = json_decode($user_preferences['preferences']);
+    $gid = $user_preferences->default_grade?$user_preferences->default_grade:$og_groups['gid'];
+
+    if(!in_array($gid, $default['default_grades'])) {
+      $gid = '_none';
+    }
+    $form['notifications']['filters'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Filters'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+      '#weight' => 1,
+    );
+    $form['notifications']['filters']['grades'] = array(
+      '#type' => 'select',
+      '#title' => t('Grades'),
+      '#options' => $default['default_grades'],
+      '#default_value' => $gid,
+      '#ajax' => array(
+        'callback' => 'druedu_notifications_team_form_filters_callback',
+        'event' =>'change',
+        'wrapper' => 'wrapper_filter_user',
+        'effect' => 'fade',
+        'progress' => array('type' => 'throbber', 'message' => NULL),
+      ),
+    );
+      // Build the form.
+      $form['notifications']['#collapsed'] = TRUE;
+
+      $form['notifications']['team_checkall'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Notify all users'),
+        '#weight' => 0,
+      );
+
+  global $user;
+  if(isset($form_state['values'])) {
+    $current_user_groups_formated = array();
+    if(is_numeric($form_state['values']['grades'])) {
+      $current_user_groups_formated[] = $form_state['values']['grades'];
+      $default_users = druedu_user_get_users_by_groups($current_user_groups_formated);
+      foreach ($default_users as $key => $default_user) {
+        $default_user = user_load($key);
+        if(!node_access($op, ($op == 'view')?$node:$node->type, $default_user)) {
+          unset($default_users[$key]);
+        }
+      }
+      if(isset($default_users[$user->uid])) {
+        unset($default_users[$user->uid]);
+      }
+    }
+    else {
+      $default_users = $default['default_users'];
+    }
+  }
+  else{
+    if($gid=='_none'){
+      $gid = $default['default_grades'];
+      unset($gid['_none']);
+      $gid = array_keys($gid);
+    }
+    $current_user_groups_formated = $gid;
+    $default_users = druedu_user_get_users_by_groups($current_user_groups_formated);
+    foreach ($default_users as $key => $default_user) {
+      $default_user = user_load($key);
+      //if(!node_access('view', isset($node->nid)?$node:$node->type, $default_user)) {
+      if(!node_access($op, ($op == 'view')?$node:$node->type, $default_user)) {
+        unset($default_users[$key]);
+      }
+    }
+  }
+
+  $default_select_uids = druedu_notifications_team_get_subscriptions($nid);
+
+    if(isset($form_state['values']['notifications_team_filter'])) {
+      //$default_select_uids = array();
+      foreach ($form_state['values']['notifications_team_filter'] as $key => $value) {
+        $default_select_uids[$key] = $key;
+      }
+    }
+    $form['notifications']['filters']['notifications_team_filter'] = array(
+      '#type' => 'checkboxes',
+      '#options' => $default_users, // $default_users = $default['default_users'];
+      '#default_value' => $default_select_uids,
+      '#prefix' => '<div id="wrapper_filter_user">',
+      '#suffix' => '</div>',
+    );
+    $form['notifications']['notifications_team_option'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Users selected'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+      '#weight' => 4,
+    );
+    //get all users.
+    // $users = entity_load('user');
+    // //array_shift($users);
+    // foreach ($users as $key => $user) {
+    //   $result[$key] =  $user->name;
+    // }
+    $form['notifications']['notifications_team_option']['notifications_team_all'] = array(
+      '#type' => 'checkboxes',
+      '#options' =>  $default['default_users'], // $default_users = $default['default_users'];
+      '#default_value' => $default_select_uids,
+      '#prefix' => '<div id="notifications-options-all">',
+      '#suffix' => '</div>',
+    );
+
+    $default_users_json = json_encode($default['default_users']);
+    $form['notifications']['notifications_team_option']['users_potential_selected'] = array(
+      '#type' => 'hidden',
+      '#default_value' => $default_users_json, 
+      '#weight' => 2,
+    );
+  }
+}
+/**
+ * Get settings value for content types
+ *
+ * @param $type
+ *   Content type to get settings for
+ * @param $option
+ *   Optional option to check (each option can be enabled or disabled)
+ */
+function druedu_notifications_team_node_options($type = NULL, $option = NULL) {
+  // We can use global options or per content type options. The default is both
+  $options = variable_get('druedu_notifications_team_options', array('node', 'comment'));
+  if ($type && variable_get('druedu_notifications_team_per_type', 0)) {
+    $options = variable_get('druedu_notifications_team_type_' . $type, $options);
+  }
+  return $option ? in_array($option, $options, TRUE) : $options;
+}
+
+/**
+ * Helper function for autocompletion. Only for user names
+ */
+function druedu_notifications_team_autocomplete() {
+  $args = func_get_args();
+  array_unshift($args, array_pop($args));
+  $array = explode(',', $args[0]);
+
+  foreach ($array as $key => $entry) {
+    $array[$key] = trim($entry);
+  }
+
+  $args[0] = trim(array_pop($array));
+  $matches = array();
+  if ($args[0]) {
+    $prefix = count($array) ? implode(', ', $array) . ', ' : '';
+    foreach (druedu_notifications_team_get_users($args, 10, TRUE) as $user) {
+      $matches[$prefix . $user] = $prefix . $user;
+    }
+  }
+  drupal_json_output($matches);
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function druedu_notifications_team_views_api() {
+  return array(
+    'api' => 3,
+  );
+}
+/**
+ * Implements hook_action_info().
+ */
+function druedu_notifications_team_action_info() {
+  return array(
+    'druedu_notifications_team_resubscribe_action' => array(
+      'type' => 'notifications',
+      'label' => t('After send messages, re-subscribe deleted subscribes, unsubscribe added subscribes.'),
+      'configurable' => FALSE,
+      'behavior' => array('sends_notification'),
+      'triggers' => array('node_update'),
+    ),
+  );
+}
+/**
+ * After send messages, re-subscribe deleted subscribes, unsubscribe added subscribes.
+ */
+function druedu_notifications_team_resubscribe_action($node, $context = array()) {
+  if(isset($context['node'])){
+    $node = $context['node'];
+    $changed_subscribes = $node->notifications_team_all;
+    $default_subscribes = druedu_notifications_team_get_subscriptions($node->nid, $reset = FALSE);
+    $deleted_subs = array_diff($default_subscribes,$changed_subscribes);
+    $added_subs = array_filter(array_diff($changed_subscribes,$default_subscribes));
+    foreach ($deleted_subs as $key => $uid) {
+      # resubscribe
+      // dpm($deleted_subs,'re-subscribe-$deleted_subs');
+      $subscription = notifications_subscription('content_thread')
+          ->instance()
+          ->set_user(user_load($uid))
+          ->set_node($node);
+      notifications_save_subscription($subscription);
+    }
+
+    foreach ($added_subs as $key => $uid) {
+      # unsubscribe
+      // dpm($added_subs,'unsubscribe-$added_subs');
+      Notifications_Subscription::delete_multiple(array('uid' => $uid), array('node:nid' => $node->nid), FALSE);
+    }
+  }
+}

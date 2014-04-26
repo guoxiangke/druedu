@@ -1,0 +1,30 @@
+
+.bulletins .accordion-inner .views-field-delete-node a.btn-link {
+    border-left: 1px solid #909090;
+    border-right: 1px solid #909090;
+    font-size: 11px;
+    line-height: 10px;
+    padding: 0 5px 0 5px;
+    color:#909090;
+}
+.bulletins .accordion-inner a.btn-link:hover {
+    color:#333;
+    text-decoration: none;
+}
+.bulletins .accordion-inner .views-field-changed {
+  font-size:13px;
+  color:#909090;
+  margin:0 0 5px 0;
+}
+.bulletins .accordion-inner .views-field-body {
+    padding:0 0 10px 0;
+}
+.bulletins .accordion-inner .views-field-edit-node,
+.bulletins .accordion-inner .views-field-delete-node {
+    float:left;
+}
+ .bulletins .accordion-inner .views-field-delete-node {
+  margin:0 0 0 5px;
+ }
+
+ .view-bulletins .views-field-share_a_node{margin-left: 5px;float: left;}

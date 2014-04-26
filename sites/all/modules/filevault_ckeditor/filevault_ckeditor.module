@@ -1,0 +1,17 @@
+<?php
+function filevault_ckeditor_wysiwyg_plugin($editor, $version) {
+  switch ($editor) {
+    case 'ckeditor':
+      return array(
+        'filevault_video' => array( // Internal plugin name
+          'extensions' => array(
+            'filevault_video' => t('Filevault Video'), // Internal plugin name as key, name visible in editor profile config UI as value.
+          ),
+          'load' => TRUE,
+          'internal' => FALSE,
+          'path' => drupal_get_path('module', 'filevault_ckeditor') .'/plugins/filevault_video/',
+        ),
+      );
+     break;
+  }
+}

@@ -1,0 +1,31 @@
+<?php
+/**
+ * Implements hook_schema().
+ */
+function druedu_user_schema() {
+  $schema['druedu_user_preference'] = array(
+    'fields' => array(
+      'uid' => array('type' => 'int', 'size' => 'normal', 'not null' => TRUE, 'default' => 0),
+      'preferences' => array('type' => 'blob', 'size' => 'normal', 'not null' => FALSE, 'default' => NULL),
+    ),
+    'primary key' => array('uid'),
+  );
+  return $schema;
+}
+
+/**
+ * Implements hook_install().
+ */
+function druedu_user_install() {
+  // Create my tables.
+  drupal_install_schema('druedu_user_preference');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function druedu_user_uninstall() {
+  // Drop my tables.
+  drupal_uninstall_schema('druedu_user_preference');
+}
+?>

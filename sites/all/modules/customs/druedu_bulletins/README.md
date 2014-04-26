@@ -1,0 +1,1 @@
+not use panels in bulletins page.

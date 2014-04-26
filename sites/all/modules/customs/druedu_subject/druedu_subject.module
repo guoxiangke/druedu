@@ -1,0 +1,479 @@
+<?php
+/**
+ * @file
+ * Defines a subject in Druedu.
+ */
+
+/** Implementation of hook_menu
+ *
+ */
+function druedu_subject_menu() {
+	// Subject page
+	$items['subjects'] = array(
+		'title' => t("Subjects"),
+		'page callback' => 'druedu_subject_dispatch',
+		'access arguments' => array('access content'),
+		'type' => MENU_CALLBACK,
+	);
+	return $items;
+
+}
+
+/** Page callback for the subject menu.
+ * Redirects to the current OG page (Grade or Group, can not be Subject) from context.
+ */
+function druedu_subject_dispatch() {
+
+	global $user;
+	$context = og_context();
+	if($context) {
+		drupal_goto(drupal_lookup_path('alias',"node/".$context['gid']));
+	} else {
+			if(!module_exists('druedu_context')) {
+				drupal_set_message(t('Unable to determine context. Please contact an administrator.'), 'error');
+				watchdog('druedu_subject',t('druedu_context missing - impossible to initialise Group context.'), NULL, WATCHDOG_ERROR);
+				return;
+			} else {
+				drupal_set_message(t('Unable to determine context. Please contact an administrator.'), 'error');
+				drupal_goto('/');
+		}
+	}
+
+}
+
+/** Implementation of hook_theme
+ *
+ */
+function druedu_subject_theme($existing, $type, $theme, $path) {
+
+	return array(
+		'subject_menu_subjects_short' => array(
+			'template' => 'subject-menu-subjects-short',
+			'arguments' => array('subject_links' => null),
+				'path' => drupal_get_path('module', 'druedu_subject')."/templates",
+		),
+		'subject_menu_full' => array(
+			'template' => 'subject-menu-full',
+			'arguments' => array('subject_links' => null, 'unit_links_tree' => null),
+			'path' => drupal_get_path('module', 'druedu_subject')."/templates",
+		),
+	);
+}
+
+
+/* =================================== Building the subjects and units block ========================================== */
+
+/**
+* Implements HOOK_menu_local_tasks_alter().
+*/
+function druedu_subject_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+	$add = arg(1);
+	if($add == 'add') {
+		$query = drupal_get_query_parameters();
+		if(array_key_exists('parent', $query) && !empty($query['parent']) && is_numeric($query['parent'])) {
+			$node_parent = subject_book_get_node_by_book_menu_link_id($query['parent']);
+			$item = menu_get_item('node/'.$node_parent->nid);
+		    if ($item['access']) {
+		        $item['title'] = t('Back to @title', array('@title' => $node_parent->title));
+		        if(empty($data['tabs'])) {
+		            $data['tabs'][] = array('count' => 0, 'output' => array());
+		        }
+		        $added_item =array(
+		            '#theme' => 'menu_local_task',
+		            '#link' => $item,
+		        ); 
+		        if(!in_array($added_item, $data['tabs'][0]['output'])){
+		            $data['tabs'][0]['output'][] = $added_item;
+		            $data['tabs'][0]['count']++;
+		        }
+		    }
+		}
+   	}
+}
+
+/** Implementation of hook_block_info
+ *
+ */
+function druedu_subject_block_info() {
+	$blocks['subjects_units_menu'] = array(
+		'info' => t('Subjects and Units Menu'),
+		'cache' => DRUPAL_NO_CACHE, //to be confirmed
+	);
+	$blocks['subjects_units_title'] = array(
+		'info' => t('Subjects and Units Title'),
+		'cache' => DRUPAL_NO_CACHE, //to be confirmed
+	);
+	return $blocks;
+}
+
+/** Implementation of hook_block_view
+ *
+ */
+function druedu_subject_block_view($delta = '') {
+	$block = array();
+
+	switch ($delta) {
+		case 'subjects_units_menu':
+		$block['title'] = NULL;
+		$block['content'] = subjects_units_menu_generate();
+		break;
+		case 'subjects_units_title':
+			$block['title'] = NULL;
+			$block['content'] = subjects_units_title_generate();
+			break;
+		}
+		return $block;
+}
+
+/** Implementation of hook_preprocess_block
+ *
+ */
+function druedu_subject_preprocess_block(&$variables) {
+	$delta = $variables['elements']['#block']->delta;
+	// Set extra blocks variables here
+	switch ($delta) {
+		case 'subjects_units_title':
+		case 'subjects_units_menu':
+		default:
+	}
+}
+
+/** Generation of the subjects and units menu block content
+ *
+ */
+function subjects_units_menu_generate() {
+	$type = subject_blocks_get_node_type();
+	$add = arg(1);
+	$content = '';
+	if($add == 'add') {
+		$query = drupal_get_query_parameters();
+		if(array_key_exists('parent', $query) && !empty($query['parent']) && is_numeric($query['parent'])) {
+			$node_parent = subject_book_get_node_by_book_menu_link_id($query['parent']);
+			$type = $node_parent->type;
+		}
+	}
+	
+	return $content = generate_subject_by_content_type($type);
+}
+
+function generate_subject_by_content_type($type) {
+	switch($type) {
+			case 'subject':
+			case 'structure_unit':
+				//Get top parent of the current item
+				$mlid = get_current_mlid_by_context();
+				//Get a list of subjects links from context
+				$subject_links = generate_subject_links();
+				//Get a tree view of the books belonging to the current subject from context
+				$unit_links_tree = generate_unit_links_tree($mlid);
+				//Theme everything!
+				$content = theme('subject_menu_full', array('subject_links' => $subject_links, 'unit_links_tree' => $unit_links_tree));
+			break;
+			case 'grade':
+			case 'group':
+				//Get a list of subjects links from context
+				$subject_links = generate_subject_links();
+				//Theme everything!
+				$content = theme('subject_menu_subjects_short', array('subject_links' => $subject_links));
+			break;
+	}
+	return $content;
+}
+
+/** Generation of the subjects links block content
+*
+*/
+function generate_subject_links() {
+	$links = &drupal_static(__FUNCTION__);
+
+	if(!isset($links)) {
+		$links = array(
+			'elements' => array(),
+			'render' => array(
+				'#theme' => 'item_list',
+				'#items' => array(),
+			),
+		);
+
+		//Get the Grade/Group context
+		$context = og_context();
+		$target_id = $context['gid'];
+		//Get the list of og_membership, depending on grade context - use EntityFieldQuery for permissions filtering
+		$query = new EntityFieldQuery();
+		$query->entityCondition('entity_type', 'og_membership')
+			->propertyCondition('gid', $target_id, '=')
+			->propertyCondition('entity_type', 'node', '=');
+		$result = $query->execute();
+		
+		if (isset($result['og_membership'])) {
+			$og_memberships = entity_load('og_membership', array_keys($result['og_membership']));
+			$etids = array();
+			foreach($og_memberships as $og_membership) {
+				$etids[] = $og_membership->etid;
+			}
+			//Get the corresponding subject nodes
+			$nodes = node_load_multiple($etids);
+			foreach($nodes as $node) {
+				if($node->type == 'subject') {
+					$links['elements'][$node->nid]['title'] = $node->title;
+					$links['elements'][$node->nid]['path'] = 'node/'.$node->nid;
+						$links['elements'][$node->nid]['alias'] = url(drupal_get_path_alias('node/'.$node->nid));
+					$links['elements'][$node->nid]['#link'] = l($node->title, 'node/'.$node->nid);
+					}
+			}
+		}
+	
+	}
+
+	foreach($links['elements'] as $element) {
+		$links['render']['#items'][] = $element['#link'];
+	}
+
+	return $links;
+
+}
+
+/** Generation of the nested units links block content
+ *
+ */
+function generate_unit_links_tree($mlid = NULL) {
+	$tree = &drupal_static(__FUNCTION__);
+	$has_match_mlid = FALSE;
+	if(!isset($tree)) {
+		$render_tree = array();
+		$tree = array();
+		//Get the Subject context
+		$context = subject_context();
+		//Get the nested list of units books nodes
+		$subject_books = subject_book_get_books($context['gid']);
+		if(sizeof($subject_books) > 1 && !is_null($mlid)) {
+			$weight = 1;
+			$collapse = 'collapsed';
+		}
+		else {
+			$weight = 0;
+			$collapse = '';
+		}
+		foreach ($subject_books as $book_id => $link) {
+			$book_arrays = subject_book_recursive($book_id, 0);
+			$tree[$book_id] = reset($book_arrays['elements']);
+			$tree[$book_id]['weight'] = $weight;
+			$render_tree[$book_id] = reset($book_arrays['render']);
+			if(!is_null($mlid) && $link['mlid'] == $mlid){
+				$has_match_mlid = TRUE;
+				$render_tree[$book_id]['weight'] = 0;
+				$tree[$book_id]['weight'] = 0;
+				$render_tree[$book_id]['class'] = array($link['mlid'], 'active', 'level-0');
+			}
+			else {
+				$weight += 1;
+				$render_tree[$book_id]['weight'] = $weight;
+				$tree[$book_id]['weight'] = $weight;
+				$render_tree[$book_id]['class'] = array($link['mlid'], 'collapsible', $collapse, 'level-0');
+			}
+		}
+		if($has_match_mlid) {
+			$render_tree['more']['data'] = '<i class="icon-chevron-down"></i>'.t('More Learning Ressources');
+			$render_tree['more']['weight'] = 1;
+			$render_tree['more']['class'] = array('toggle-more-subjects');
+			
+		}
+		uasort($tree, 'drupal_sort_weight');
+		uasort($render_tree, 'drupal_sort_weight');
+	}
+	$links = array(
+		'elements' => $tree,
+		'render' => array(
+			'#theme' => 'item_list',
+			'#items' => $render_tree,
+		),
+	);
+	return $links;
+}
+
+
+
+/** Gets node information by the book page menu link
+ *
+ */
+function subject_book_get_node_by_book_menu_link_id($mlid) {
+	$query = db_query('SElECT nid from book where mlid = :mlid', array(':mlid' => $mlid));
+    $result = $query->fetchField();    
+    return $node_parent = node_load($result);
+}
+
+/** Gets all the books of the current subject
+ *
+ */
+function subject_book_get_books($subject_id) {
+  $subject_books = &drupal_static(__FUNCTION__);
+
+  if (!isset($subject_books)) {
+    $subject_books = array();
+    $nids = db_query("SELECT DISTINCT (bid) FROM {book}")->fetchCol();
+    if ($nids) {
+      $query = db_select('book', 'b', array('fetch' => PDO::FETCH_ASSOC));
+      $query->join('node', 'n', 'b.nid = n.nid');
+      $query->join('menu_links', 'ml', 'b.mlid = ml.mlid');
+			$query->join('og_membership', 'ogm', 'ogm.etid = n.nid');
+      $query->addField('n', 'type', 'type');
+      $query->addField('n', 'title', 'title');
+      $query->fields('b');
+      $query->fields('ml');
+      $query->condition('n.nid', $nids, 'IN');
+      $query->condition('n.status', 1);
+			$query->condition('ogm.gid', $subject_id, '=');
+      $query->orderBy('ml.weight');
+      $query->orderBy('ml.link_title');
+      $query->addTag('node_access');
+      $result = $query->execute();
+      foreach ($result as $link) {
+        $link['href'] = $link['link_path'];
+        $link['options'] = unserialize($link['options']);
+        $subject_books[$link['bid']] = $link;
+      }
+    }
+  }
+
+  return $subject_books;
+}
+
+
+/** Recursively builds the nested array
+ *
+ */
+function subject_book_recursive($bid, $pid) {
+	$sub_tree = array();
+	$render_tree = array();
+	$query = db_select('book', 'b', array('fetch' => PDO::FETCH_ASSOC));
+	$query->join('menu_links', 'ml', 'b.mlid = ml.mlid');
+	$query->join('node', 'n', 'b.nid = n.nid');
+	$query->addField('n', 'nid', 'nid');
+	$query->addField('b', 'mlid', 'mlid');
+	$query->addField('ml', 'link_path', 'link_path');
+	$query->addField('ml', 'has_children', 'has_children');
+	$query->addField('ml', 'link_title', 'link_title');
+	$query->addField('ml', 'link_path', 'link_path');
+	$query->addField('n', 'changed', 'changed');
+	$query->condition('b.bid', $bid, '=');
+	$query->condition('ml.plid', $pid, '=');
+	$query->condition('n.status', 1, '=');
+	$query->orderBy('ml.weight');
+	$query->orderBy('ml.link_title');
+	//$query->orderBy('b.mlid');
+	$result = $query->execute();
+	if ($result) {
+		foreach ($result as $data) {
+
+			switch (node_mark($data['nid'], $data['changed'])){
+				case 0:
+					$new = 'no'; break;
+				case 1:
+					$new = 'new'; break;
+				case 2:
+					$new = 'updated'; break;
+			}
+
+			$sub_tree[$data['nid']]['new'] = $new;
+			$sub_tree[$data['nid']]['title'] = $data['link_title'];
+			$sub_tree[$data['nid']]['path'] = $data['link_path'];
+			$sub_tree[$data['nid']]['alias'] = url(drupal_get_path_alias($data['link_path']));
+			$sub_tree[$data['nid']]['#link'] = l($data['link_title'], $data['link_path']);
+			$render_tree[$data['nid']] = array('data' => $sub_tree[$data['nid']]['#link']);
+			if ($data['has_children']) {
+				$book_arrays = subject_book_recursive($bid, $data['mlid']);
+				$sub_tree[$data['nid']]['#children'] = $book_arrays['elements'];
+				$render_tree[$data['nid']]['children'] = $book_arrays['render'];
+			}
+		}
+	}
+
+	// items: An array of items to be displayed in the list. If an item is a string, then it is used as is. If an item is an array, then the "data" element of the array is used as the contents of the list item. If an item is an array with a "children" element, those children are displayed in a nested list. All other elements are treated as attributes of the list item element.
+	// title: The title of the list.
+	// type: The type of list to return (e.g. "ul", "ol").
+	// attributes: The attributes applied to the list element.
+
+	$book_arrays = array('elements' => $sub_tree, 'render' => $render_tree);
+
+	return $book_arrays;
+}
+
+
+
+/** Generation of the subjects and units title block content
+ *
+ */
+function subjects_units_title_generate() {
+	$type = subject_blocks_get_node_type();
+	$add = arg(1);
+	$title = '';
+	if($add == 'add') {
+		return $title;
+	}
+	elseif($type){
+		switch($type) {
+			case 'subject':
+			case 'structure_unit':
+				if($context = subject_context()) {
+					$node_context = &drupal_static(__FUNCTION__);
+						if(!isset($node_context)) {
+							$node_context = node_load($context['gid']);
+						}
+					$title = $node_context->title;
+				}
+			break;
+			case 'grade':
+			case 'group':
+				$title = t('Home');
+			break;
+		}
+	}
+	return $title;
+}
+
+function get_current_mlid_by_context() {
+	$node = menu_get_object();
+	if(is_object($node) && isset($node->book)) {
+		return $node->book['p1'];
+	}
+	else{
+		$query = drupal_get_query_parameters();
+		if(array_key_exists('parent', $query) && !empty($query['parent']) && is_numeric($query['parent'])) {
+			$node_parent = subject_book_get_node_by_book_menu_link_id($query['parent']);
+			if(is_object($node_parent) && isset($node_parent->book)) {
+				return $node_parent->book['p1'];
+			}
+		}
+	}
+	return NULL;
+}
+
+/** Get the current node type from arguments
+ *
+ */
+function subject_blocks_get_node_type() {
+
+	$type = FALSE;
+
+	//Get the current node type if we are viewing a node, or the node type to add if we are adding a node
+	if(arg(0) == 'node' && is_numeric(arg(1))) {
+		$type = &drupal_static(__FUNCTION__);
+		if(!isset($type)) {
+			$node = node_load(arg(1));
+			$type = $node->type;
+		}
+	} elseif(arg(0) == 'node' && arg(1) == 'add') {
+		$item = menu_get_item(implode('/',arg()));
+		foreach($item['page_arguments'] as $arg) {
+			if(in_array($arg, array_keys(node_type_get_types()))) {
+				$type = $arg;
+				break;
+			}
+		}
+	}
+
+	return $type;
+
+}
+
+/* =================================== END Building the subjects and units block ========================================== */

@@ -1,0 +1,302 @@
+#profile .main-content {
+	background:#edf9ff;
+	border:1px solid #d6f1f8;
+	padding:20px;
+	margin-right:10px;
+	border-radius:3px;
+	-moz-border-radius:3px;
+	-webkit-border-radius:3px;
+	min-height: 500px;
+}
+.pro-middle .user-name,
+.pro-middle .user-info {
+	margin:0 0 10px 0;
+}
+.pro-middle .user-info {
+	font-family:"Arial";
+	font-size:11px;
+	text-transform: uppercase;
+}
+#profile .user-name .field {
+    font-family: "News Cycle";
+	display:inline-block;
+	font-size:36px;
+}
+#profile .user-info .field-item {
+	display:inline-block;
+	padding:0 10px 0 0;
+}
+#profile .accordion-heading .accordion-toggle:hover {
+	text-decoration:none;
+}
+#profile .accordion-group {
+	margin-bottom:8px;
+}
+#profile .accordion-heading span {
+	padding:0 0 0 15px;
+}
+#profile #sidebar-left .nav-tabs > .active > a, 
+#profile #sidebar-left .nav-tabs > .active > a:hover {
+	background:#edf9ff;	
+	border-top:1px solid #d6f1f8;
+	border-left:1px solid #d6f1f8;
+	border-bottom:1px solid #d6f1f8;	
+}
+#profile .nav-tabs.nav-stacked > li:first-child > a {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+#profile #sidebar-left .nav-tabs > li > a {
+	border-top:1px solid #fff;
+	border-bottom:1px solid #fff;
+	border-left:1px solid #fff;
+}
+#profile #sidebar-left .nav-tabs > li > a:hover {
+	background:#edf9ff;	
+	border-top:1px solid #d6f1f8;
+	border-left:1px solid #d6f1f8;
+	border-bottom:1px solid #d6f1f8;	
+}
+#profile .nav-tabs.nav-stacked > li > a {
+	border:0;
+}
+#profile #sidebar-left ul.nav {
+	background:none;
+}
+#profile #sidebar-left .nav li.active a {
+	color:#0196be;
+}
+#profile #sidebar-left .inner {
+	margin-right:0;
+	margin-left:20px;
+	position:relative;
+	left:1px;
+	padding-top:20px;
+}
+#profile #block-druedu-layout-alter-user-picture {
+	text-align:center;
+}
+#profile .img-circle {
+	padding:0px;
+	border:3px solid #0196be;
+	width:150px;
+	height:150px;
+}
+#profile .nav-tabs > li {
+	margin-bottom:2px;
+}
+#profile #sidebar-right {
+	background:none;
+	border-radius:3px;
+	-moz-border-radius:3px;
+	-webkit-border-radius:3px;
+}
+#profile .accordion-group {
+	border:1px solid #d6f1f8;
+	border-radius:3px;
+	-moz-border-radius:3px;
+	-webkit-border-radius:3px;
+}
+#user-profile-form .fieldset-wrapper, #druedu-user-preferences-form .fieldset-wrapper {
+	border:1px solid #d6f1f8;
+	padding:20px;
+	border-top: 0;
+}
+#profile .accordion-inner {
+	border-top:1px solid #d6f1f8;
+	padding:20px;
+}
+
+#profile .accordion-heading a, #user-profile-form .fieldset-legend a.fieldset-title, #druedu-user-preferences-form .fieldset-legend a.fieldset-title{
+    font-family: "News Cycle";
+	background:#fff;
+	font-size:20px;
+}
+/*#profile .field-name-field-about-me {
+	background:url('../img/quote_open.png') left top no-repeat;
+	padding:0 0 0 50px;
+}*/
+#collapsefield_about_me p:first-child:first-letter {
+    color: #0196BE;
+    float: left;
+    font-family: "Helvetica Neue","Helvetica",Arial,serif;
+    font-size: 500%;
+    font-weight: 700;
+    height: auto;
+    line-height: 0.9em;
+    padding-left: 3px;
+    padding-right: 9px;
+    padding-top: 1px;
+    top: 0;
+	line-height:1.8em;
+}
+#collapsefield_favourite_subject .field-item {
+	display: inline-block;	
+}
+#collapsefield_favourite_subject a {
+	color:#fff;
+ 	background-color: #74279A;
+	border-radius: 20px 20px 20px 20px;
+	display: inline-block;
+	margin: 0 3px 7px 0;
+	padding: 5px 11px;
+	font-size: 11.844px;
+ 	font-weight: bold;
+	line-height: 14px;
+	text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+	white-space: nowrap;
+}
+#collapsefield_favourite_subject a:hover {
+ 	background-color: #501A6C;
+	text-decoration:none;
+}
+#profile #bgimage  {
+/*    background: url("../img/quote_open.png") no-repeat scroll 0 0 transparent;*/
+    margin: 1em 20px;
+/*    padding-left: 40px;*/
+	border-left:5px solid #D6F1F8;
+}
+#profile #bgimage span {
+	display:inline-block;
+	font-size:11px;
+}
+/* icon-fonts */
+.icon-field_about_me:before  { content: "\f007"; }
+.icon-field_want_to_be_a:before { content: "\f0d0"; }
+.icon-field_favourite_subject:before { content: "\f004"; }
+.icon-field_favourite_quote:before  { content: "\f02d"; }
+.icon-field_best_things_about_china:before { content: "\f005"; }
+.icon-field_interests:before { content: "\f025"; }
+.icon-og_user_group_ref:before { content: "\f07c"; }
+.icon-field_speaks:before { content: "\f024"; }
+/* edit page */
+#user-profile-form fieldset, #druedu-user-preferences-form  fieldset{
+	/*margin:0 0 30px 0;*/
+	width: 100%;
+	margin-bottom: 8px;
+}
+#user-profile-form #edit-accordions fieldset{
+	margin:0;
+}
+#user-profile-form label, #druedu-user-preferences-form label {
+	font-size:13px;
+	color:#333;
+}
+#user-profile-form i, #druedu-user-preferences-form i{
+	margin-right: 20px;
+	margin-left: 10px;
+}
+#user-profile-form fieldset .fieldset-title,
+#druedu-user-preferences-form fieldset .fieldset-title,
+#user-profile-form #edit-change-your-picture fieldset legend{
+    font-family: "News Cycle";
+	font-size:16px;
+	color:#0196BE;
+}
+#user-profile-form .fieldset-legend a.fieldset-title:hover, #druedu-user-preferences-form .fieldset-legend a.fieldset-title:hover{
+	text-decoration: none;
+	color: #006b88;
+}
+#user-profile-form fieldset legend, #druedu-user-preferences-form fieldset legend{
+	background:#fff;
+	margin: 0;
+	border: 1px solid #d6f1f8;
+	line-height: 35px;
+}
+#user-profile-form .controls.password-parent{
+	position: relative;
+	height: 85px;
+}
+#user-profile-form .password-strength {
+    position: absolute;
+    margin-top:0;
+    bottom: 0;
+    width: 17em;
+}
+#user-profile-form .password-indicator {
+    background-color: #C4C4C4;
+    height: 0.3em;
+    width: 100%;
+}
+#edit-change-your-pass .controls .control-group {
+	float:none;
+}
+#edit-change-your-pass {
+	width:517px;
+}
+#edit-change-your-pass .password-strength-text {
+	font-size:12px;
+	color:#0196BE;
+}
+#edit-change-your-picture .user-picture,
+#edit-change-your-picture .form-item-files-picture-upload {
+	float:left;
+}
+/*#user-profile-form #edit-change-your-picture .fieldset-title {
+	font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+	font-size:21px;
+	color:#333333;
+}*/
+#edit-change-your-picture .form-item-picture-delete {
+	clear:both;
+}
+#edit-change-your-picture .user-picture {
+	margin:0 40px 20px 0;
+}
+#edit-ldap-user-prov-entries {
+	display:none;
+}
+#user-profile-form .form-actions {
+	background:none;
+	padding:0;
+	border:0;
+}
+#user-profile-form .form-wrapper {
+	clear:both;
+}
+#druedu-user-preferences-form .form-wrapper {
+	clear:both;
+}
+#edit-og-user-taxonomy-term {
+	display:none;
+}
+.form-type-radios .controls .control-group {
+	float:left;
+}
+.form-type-checkboxes {
+	clear:both;
+}
+.form-type-checkboxes .controls .control-group {
+	float:left;
+}
+#edit-change-your-email {
+	clear:both;
+}
+
+.help-block{
+	clear: both;
+}
+
+.field-name-og-user-group-ref, .field-name-field-speaks {font-weight: bold;}
+
+.view-id-blogs.view-display-id-page_blog_user .views-row{position: relative;}
+.view-id-blogs.view-display-id-page_blog_user .views-field.views-field-edit-node,.view-id-blogs.view-display-id-page_blog_user .views-field.views-field-delete-node{
+	position: absolute;
+	top: 15px;
+}
+.view-id-blogs.view-display-id-page_blog_user .views-field.views-field-edit-node{right: 45px;}
+.view-id-blogs.view-display-id-page_blog_user .views-field.views-field-delete-node{right: 0px;}
+.view-id-blogs.view-display-id-page_blog_user .views-field.read_more{display: inline-block;}
+.view-id-blogs.view-display-id-page_blog_user .views-field.hide{display: none;}
+.view-id-blogs.view-display-id-page_blog_user .views-field.collapse_it{display: inline-block;}
+.view-id-blogs.view-display-id-page_blog_user .views-field.collapse_it.hide{display: none;}
+.view-id-blogs.view-display-id-page_blog_user .views-field.btn-comments{display: inline-block;}
+.view-id-blogs.view-display-id-page_blog_user .views-field.views-field-edit-node{right: 45px;}
+.view-id-blogs.view-display-id-page_blog_user .views-row{
+	margin-top: 20px;
+	border-top: 1px solid #D6F1F8
+}
+.view-id-blogs.view-display-id-page_blog_user .views-row.views-row-first{
+	margin-top: 0;
+	border-top: none;
+}

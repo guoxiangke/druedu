@@ -1,0 +1,888 @@
+<?php
+
+$view = new view();
+$view->name = 'homework_dashboard';
+$view->description = '';
+$view->tag = 'default';
+$view->base_table = 'node';
+$view->human_name = 'homework_dashboard';
+$view->core = 7;
+$view->api_version = '3.0';
+$view->disabled = FALSE; /* Edit this to true to make a default view disabled initially */
+
+/* Display: Master */
+$handler = $view->new_display('default', 'Master', 'default');
+$handler->display->display_options['title'] = 'Homework Due';
+$handler->display->display_options['use_more_always'] = FALSE;
+$handler->display->display_options['access']['type'] = 'perm';
+$handler->display->display_options['access']['perm'] = 'access admin dashboard';
+$handler->display->display_options['cache']['type'] = 'none';
+$handler->display->display_options['query']['type'] = 'views_query';
+$handler->display->display_options['exposed_form']['type'] = 'basic';
+$handler->display->display_options['pager']['type'] = 'some';
+$handler->display->display_options['pager']['options']['items_per_page'] = '5';
+$handler->display->display_options['style_plugin'] = 'default';
+$handler->display->display_options['style_options']['grouping'] = array(
+  0 => array(
+    'field' => 'field_assignment_grade',
+    'rendered' => 1,
+    'rendered_strip' => 0,
+  ),
+);
+$handler->display->display_options['style_options']['row_class'] = 'clearfix';
+$handler->display->display_options['row_plugin'] = 'fields';
+/* No results behavior: Global: Text area */
+$handler->display->display_options['empty']['area']['id'] = 'area';
+$handler->display->display_options['empty']['area']['table'] = 'views';
+$handler->display->display_options['empty']['area']['field'] = 'area';
+$handler->display->display_options['empty']['area']['empty'] = TRUE;
+$handler->display->display_options['empty']['area']['content'] = 'No Homework found';
+$handler->display->display_options['empty']['area']['format'] = 'full_html';
+/* Relationship: Entity Reference: Referenced Entity */
+$handler->display->display_options['relationships']['field_assignments_set_referenced_target_id']['id'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['relationships']['field_assignments_set_referenced_target_id']['table'] = 'field_data_field_assignments_set_referenced';
+$handler->display->display_options['relationships']['field_assignments_set_referenced_target_id']['field'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['relationships']['field_assignments_set_referenced_target_id']['required'] = TRUE;
+/* Relationship: Content: Author */
+$handler->display->display_options['relationships']['uid']['id'] = 'uid';
+$handler->display->display_options['relationships']['uid']['table'] = 'node';
+$handler->display->display_options['relationships']['uid']['field'] = 'uid';
+$handler->display->display_options['relationships']['uid']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['relationships']['uid']['required'] = TRUE;
+/* Field: Content: Title */
+$handler->display->display_options['fields']['title']['id'] = 'title';
+$handler->display->display_options['fields']['title']['table'] = 'node';
+$handler->display->display_options['fields']['title']['field'] = 'title';
+$handler->display->display_options['fields']['title']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['title']['label'] = '';
+$handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
+$handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
+$handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+/* Field: Content: Due date */
+$handler->display->display_options['fields']['field_assignment_due_date']['id'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['table'] = 'field_data_field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['field'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_due_date']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_due_date']['alter']['text'] = '<span>';
+$handler->display->display_options['fields']['field_assignment_due_date']['element_type'] = 'span';
+$handler->display->display_options['fields']['field_assignment_due_date']['element_class'] = 'due label label-due';
+$handler->display->display_options['fields']['field_assignment_due_date']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_due_date']['type'] = 'counter_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['settings'] = array(
+  'relationship' => '',
+  'ui_name' => '',
+  'custom_label' => 0,
+  'label' => '',
+  'element_label_colon' => 0,
+  'exclude' => 0,
+  'element_type_enable' => 0,
+  'element_type' => '',
+  'element_class_enable' => 0,
+  'element_class' => '',
+  'element_label_type_enable' => 0,
+  'element_label_type' => '',
+  'element_label_class_enable' => 0,
+  'element_label_class' => '',
+  'element_wrapper_type_enable' => 0,
+  'element_wrapper_type' => '',
+  'element_wrapper_class_enable' => 0,
+  'element_wrapper_class' => '',
+  'element_default_classes' => 0,
+  'alter' => array(
+    'alter_text' => 0,
+    'text' => '<span>',
+    'make_link' => 0,
+    'path' => '',
+    'absolute' => 0,
+    'replace_spaces' => 0,
+    'external' => 0,
+    'path_case' => 'none',
+    'link_class' => '',
+    'alt' => '',
+    'rel' => '',
+    'prefix' => '',
+    'suffix' => '',
+    'target' => '',
+    'trim' => 0,
+    'max_length' => '',
+    'word_boundary' => 0,
+    'ellipsis' => 0,
+    'more_link' => 0,
+    'more_link_text' => '',
+    'more_link_path' => '',
+    'html' => 0,
+    'strip_tags' => 0,
+    'preserve_tags' => '',
+    'trim_whitespace' => 0,
+    'nl2br' => 0,
+  ),
+  'empty' => '',
+  'empty_zero' => 0,
+  'hide_empty' => 0,
+  'hide_alter_empty' => 0,
+  'click_sort_column' => 'value',
+  'type' => '',
+  'field_api_classes' => 0,
+);
+/* Field: Content: Due date */
+$handler->display->display_options['fields']['field_assignment_due_date_1']['id'] = 'field_assignment_due_date_1';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['table'] = 'field_data_field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['field'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_due_date_1']['settings'] = array(
+  'format_type' => 'druedu_date_time',
+  'fromto' => 'both',
+  'multiple_number' => '',
+  'multiple_from' => '',
+  'multiple_to' => '',
+);
+/* Field: Content: Subject */
+$handler->display->display_options['fields']['field_assignment_subject']['id'] = 'field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['table'] = 'field_data_field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['field'] = 'field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_subject']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_subject']['alter']['alter_text'] = TRUE;
+$handler->display->display_options['fields']['field_assignment_subject']['alter']['text'] = '[field_assignment_subject] /';
+$handler->display->display_options['fields']['field_assignment_subject']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_subject']['settings'] = array(
+  'link' => 0,
+);
+/* Field: User: Title */
+$handler->display->display_options['fields']['field_title']['id'] = 'field_title';
+$handler->display->display_options['fields']['field_title']['table'] = 'field_data_field_title';
+$handler->display->display_options['fields']['field_title']['field'] = 'field_title';
+$handler->display->display_options['fields']['field_title']['relationship'] = 'uid';
+$handler->display->display_options['fields']['field_title']['label'] = '';
+$handler->display->display_options['fields']['field_title']['element_label_colon'] = FALSE;
+/* Field: User: Lastname */
+$handler->display->display_options['fields']['field_lastname']['id'] = 'field_lastname';
+$handler->display->display_options['fields']['field_lastname']['table'] = 'field_data_field_lastname';
+$handler->display->display_options['fields']['field_lastname']['field'] = 'field_lastname';
+$handler->display->display_options['fields']['field_lastname']['relationship'] = 'uid';
+$handler->display->display_options['fields']['field_lastname']['label'] = '';
+$handler->display->display_options['fields']['field_lastname']['element_label_colon'] = FALSE;
+/* Field: Content: Link */
+$handler->display->display_options['fields']['view_node']['id'] = 'view_node';
+$handler->display->display_options['fields']['view_node']['table'] = 'views_entity_node';
+$handler->display->display_options['fields']['view_node']['field'] = 'view_node';
+$handler->display->display_options['fields']['view_node']['label'] = '';
+$handler->display->display_options['fields']['view_node']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['view_node']['text'] = 'Submit Homework';
+/* Sort criterion: Content: Due date (field_assignment_due_date) */
+$handler->display->display_options['sorts']['field_assignment_due_date_value']['id'] = 'field_assignment_due_date_value';
+$handler->display->display_options['sorts']['field_assignment_due_date_value']['table'] = 'field_data_field_assignment_due_date';
+$handler->display->display_options['sorts']['field_assignment_due_date_value']['field'] = 'field_assignment_due_date_value';
+$handler->display->display_options['sorts']['field_assignment_due_date_value']['relationship'] = 'field_assignments_set_referenced_target_id';
+/* Contextual filter: Content: Author uid */
+$handler->display->display_options['arguments']['uid']['id'] = 'uid';
+$handler->display->display_options['arguments']['uid']['table'] = 'node';
+$handler->display->display_options['arguments']['uid']['field'] = 'uid';
+$handler->display->display_options['arguments']['uid']['default_action'] = 'default';
+$handler->display->display_options['arguments']['uid']['default_argument_type'] = 'current_user';
+$handler->display->display_options['arguments']['uid']['summary']['number_of_records'] = '0';
+$handler->display->display_options['arguments']['uid']['summary']['format'] = 'default_summary';
+$handler->display->display_options['arguments']['uid']['summary_options']['items_per_page'] = '25';
+/* Filter criterion: Content: Published */
+$handler->display->display_options['filters']['status']['id'] = 'status';
+$handler->display->display_options['filters']['status']['table'] = 'node';
+$handler->display->display_options['filters']['status']['field'] = 'status';
+$handler->display->display_options['filters']['status']['value'] = 1;
+$handler->display->display_options['filters']['status']['group'] = 1;
+$handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
+/* Filter criterion: Content: Type */
+$handler->display->display_options['filters']['type']['id'] = 'type';
+$handler->display->display_options['filters']['type']['table'] = 'node';
+$handler->display->display_options['filters']['type']['field'] = 'type';
+$handler->display->display_options['filters']['type']['value'] = array(
+  'assignment' => 'assignment',
+);
+/* Filter criterion: Content: Status (field_assignment_status) */
+$handler->display->display_options['filters']['field_assignment_status_tid']['id'] = 'field_assignment_status_tid';
+$handler->display->display_options['filters']['field_assignment_status_tid']['table'] = 'field_data_field_assignment_status';
+$handler->display->display_options['filters']['field_assignment_status_tid']['field'] = 'field_assignment_status_tid';
+$handler->display->display_options['filters']['field_assignment_status_tid']['operator'] = 'not';
+$handler->display->display_options['filters']['field_assignment_status_tid']['value'] = array(
+  101 => '101',
+);
+$handler->display->display_options['filters']['field_assignment_status_tid']['type'] = 'select';
+$handler->display->display_options['filters']['field_assignment_status_tid']['vocabulary'] = 'status_assignment';
+/* Filter criterion: Content: Status (field_assignment_set_status) */
+$handler->display->display_options['filters']['field_assignment_set_status_value']['id'] = 'field_assignment_set_status_value';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['table'] = 'field_data_field_assignment_set_status';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['field'] = 'field_assignment_set_status_value';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['value'] = array(
+  1 => '1',
+);
+
+/* Display: Homework Due */
+$handler = $view->new_display('block', 'Homework Due', 'current_homework_dashboard');
+$handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
+$handler->display->display_options['defaults']['access'] = FALSE;
+$handler->display->display_options['access']['type'] = 'perm';
+$handler->display->display_options['access']['perm'] = 'access student dashboard';
+$handler->display->display_options['defaults']['pager'] = FALSE;
+$handler->display->display_options['pager']['type'] = 'none';
+$handler->display->display_options['pager']['options']['offset'] = '0';
+$handler->display->display_options['defaults']['fields'] = FALSE;
+/* Field: Content: Title */
+$handler->display->display_options['fields']['title']['id'] = 'title';
+$handler->display->display_options['fields']['title']['table'] = 'node';
+$handler->display->display_options['fields']['title']['field'] = 'title';
+$handler->display->display_options['fields']['title']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['title']['label'] = '';
+$handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
+$handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
+$handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['title']['link_to_node'] = FALSE;
+/* Field: Content: Due date */
+$handler->display->display_options['fields']['field_assignment_due_date']['id'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['table'] = 'field_data_field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['field'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_due_date']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_due_date']['alter']['text'] = '<span>';
+$handler->display->display_options['fields']['field_assignment_due_date']['element_type'] = 'span';
+$handler->display->display_options['fields']['field_assignment_due_date']['element_class'] = 'due label label-due';
+$handler->display->display_options['fields']['field_assignment_due_date']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_due_date']['type'] = 'counter_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['settings'] = array(
+  'relationship' => '',
+  'ui_name' => '',
+  'custom_label' => 0,
+  'label' => '',
+  'element_label_colon' => 0,
+  'exclude' => 0,
+  'element_type_enable' => 0,
+  'element_type' => '',
+  'element_class_enable' => 0,
+  'element_class' => '',
+  'element_label_type_enable' => 0,
+  'element_label_type' => '',
+  'element_label_class_enable' => 0,
+  'element_label_class' => '',
+  'element_wrapper_type_enable' => 0,
+  'element_wrapper_type' => '',
+  'element_wrapper_class_enable' => 0,
+  'element_wrapper_class' => '',
+  'element_default_classes' => 0,
+  'alter' => array(
+    'alter_text' => 0,
+    'text' => '<span>',
+    'make_link' => 0,
+    'path' => '',
+    'absolute' => 0,
+    'replace_spaces' => 0,
+    'external' => 0,
+    'path_case' => 'none',
+    'link_class' => '',
+    'alt' => '',
+    'rel' => '',
+    'prefix' => '',
+    'suffix' => '',
+    'target' => '',
+    'trim' => 0,
+    'max_length' => '',
+    'word_boundary' => 0,
+    'ellipsis' => 0,
+    'more_link' => 0,
+    'more_link_text' => '',
+    'more_link_path' => '',
+    'html' => 0,
+    'strip_tags' => 0,
+    'preserve_tags' => '',
+    'trim_whitespace' => 0,
+    'nl2br' => 0,
+  ),
+  'empty' => '',
+  'empty_zero' => 0,
+  'hide_empty' => 0,
+  'hide_alter_empty' => 0,
+  'click_sort_column' => 'value',
+  'type' => '',
+  'field_api_classes' => 0,
+);
+/* Field: Content: Due date */
+$handler->display->display_options['fields']['field_assignment_due_date_1']['id'] = 'field_assignment_due_date_1';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['table'] = 'field_data_field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['field'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_due_date_1']['settings'] = array(
+  'format_type' => 'druedu_date_time',
+  'fromto' => 'both',
+  'multiple_number' => '',
+  'multiple_from' => '',
+  'multiple_to' => '',
+);
+/* Field: Content: Subject */
+$handler->display->display_options['fields']['field_assignment_subject']['id'] = 'field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['table'] = 'field_data_field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['field'] = 'field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_subject']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_subject']['alter']['alter_text'] = TRUE;
+$handler->display->display_options['fields']['field_assignment_subject']['alter']['text'] = '[field_assignment_subject] /';
+$handler->display->display_options['fields']['field_assignment_subject']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_subject']['settings'] = array(
+  'link' => 0,
+);
+/* Field: User: Title */
+$handler->display->display_options['fields']['field_title']['id'] = 'field_title';
+$handler->display->display_options['fields']['field_title']['table'] = 'field_data_field_title';
+$handler->display->display_options['fields']['field_title']['field'] = 'field_title';
+$handler->display->display_options['fields']['field_title']['relationship'] = 'uid';
+$handler->display->display_options['fields']['field_title']['label'] = '';
+$handler->display->display_options['fields']['field_title']['element_label_colon'] = FALSE;
+/* Field: User: Lastname */
+$handler->display->display_options['fields']['field_lastname']['id'] = 'field_lastname';
+$handler->display->display_options['fields']['field_lastname']['table'] = 'field_data_field_lastname';
+$handler->display->display_options['fields']['field_lastname']['field'] = 'field_lastname';
+$handler->display->display_options['fields']['field_lastname']['relationship'] = 'uid';
+$handler->display->display_options['fields']['field_lastname']['label'] = '';
+$handler->display->display_options['fields']['field_lastname']['element_label_colon'] = FALSE;
+/* Field: Content: Link */
+$handler->display->display_options['fields']['view_node']['id'] = 'view_node';
+$handler->display->display_options['fields']['view_node']['table'] = 'views_entity_node';
+$handler->display->display_options['fields']['view_node']['field'] = 'view_node';
+$handler->display->display_options['fields']['view_node']['label'] = '';
+$handler->display->display_options['fields']['view_node']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['view_node']['text'] = 'Submit Homework';
+$handler->display->display_options['block_description'] = 'Homework Due';
+
+/* Display: My Homework */
+$handler = $view->new_display('block', 'My Homework', 'completed_homework');
+$handler->display->display_options['defaults']['title'] = FALSE;
+$handler->display->display_options['title'] = 'My Homework';
+$handler->display->display_options['defaults']['use_ajax'] = FALSE;
+$handler->display->display_options['use_ajax'] = TRUE;
+$handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
+$handler->display->display_options['defaults']['access'] = FALSE;
+$handler->display->display_options['access']['type'] = 'perm';
+$handler->display->display_options['access']['perm'] = 'access student dashboard';
+$handler->display->display_options['defaults']['exposed_form'] = FALSE;
+$handler->display->display_options['exposed_form']['type'] = 'basic';
+$handler->display->display_options['exposed_form']['options']['submit_button'] = 'Search';
+$handler->display->display_options['defaults']['pager'] = FALSE;
+$handler->display->display_options['pager']['type'] = 'full';
+$handler->display->display_options['pager']['options']['items_per_page'] = '15';
+$handler->display->display_options['pager']['options']['offset'] = '0';
+$handler->display->display_options['pager']['options']['id'] = '0';
+$handler->display->display_options['pager']['options']['quantity'] = '9';
+$handler->display->display_options['pager']['options']['tags']['previous'] = '';
+$handler->display->display_options['pager']['options']['tags']['last'] = '';
+$handler->display->display_options['defaults']['fields'] = FALSE;
+/* Field: Content: Due date */
+$handler->display->display_options['fields']['field_assignment_due_date_1']['id'] = 'field_assignment_due_date_1';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['table'] = 'field_data_field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['field'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_due_date_1']['hide_empty'] = TRUE;
+$handler->display->display_options['fields']['field_assignment_due_date_1']['settings'] = array(
+  'format_type' => 'druedu_date_and_month',
+  'fromto' => 'both',
+  'multiple_number' => '',
+  'multiple_from' => '',
+  'multiple_to' => '',
+);
+/* Field: Content: Due date */
+$handler->display->display_options['fields']['field_assignment_due_date']['id'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['table'] = 'field_data_field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['field'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_due_date']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_due_date']['alter']['text'] = '<span>';
+$handler->display->display_options['fields']['field_assignment_due_date']['element_type'] = 'span';
+$handler->display->display_options['fields']['field_assignment_due_date']['element_class'] = 'due label label-due';
+$handler->display->display_options['fields']['field_assignment_due_date']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_due_date']['hide_empty'] = TRUE;
+$handler->display->display_options['fields']['field_assignment_due_date']['type'] = 'counter_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['settings'] = array(
+  'format_type' => 'long',
+  'fromto' => '',
+  'multiple_number' => '',
+  'multiple_from' => '',
+  'multiple_to' => '',
+);
+/* Field: Content: Subject */
+$handler->display->display_options['fields']['field_assignment_subject']['id'] = 'field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['table'] = 'field_data_field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['field'] = 'field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_subject']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_subject']['alter']['alter_text'] = TRUE;
+$handler->display->display_options['fields']['field_assignment_subject']['alter']['text'] = '[field_assignment_subject] /';
+$handler->display->display_options['fields']['field_assignment_subject']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_subject']['settings'] = array(
+  'link' => 0,
+);
+/* Field: User: Title */
+$handler->display->display_options['fields']['field_title']['id'] = 'field_title';
+$handler->display->display_options['fields']['field_title']['table'] = 'field_data_field_title';
+$handler->display->display_options['fields']['field_title']['field'] = 'field_title';
+$handler->display->display_options['fields']['field_title']['relationship'] = 'uid';
+$handler->display->display_options['fields']['field_title']['label'] = '';
+$handler->display->display_options['fields']['field_title']['element_label_colon'] = FALSE;
+/* Field: User: Lastname */
+$handler->display->display_options['fields']['field_lastname']['id'] = 'field_lastname';
+$handler->display->display_options['fields']['field_lastname']['table'] = 'field_data_field_lastname';
+$handler->display->display_options['fields']['field_lastname']['field'] = 'field_lastname';
+$handler->display->display_options['fields']['field_lastname']['relationship'] = 'uid';
+$handler->display->display_options['fields']['field_lastname']['label'] = '';
+$handler->display->display_options['fields']['field_lastname']['element_label_colon'] = FALSE;
+/* Field: Content: Nid */
+$handler->display->display_options['fields']['nid']['id'] = 'nid';
+$handler->display->display_options['fields']['nid']['table'] = 'node';
+$handler->display->display_options['fields']['nid']['field'] = 'nid';
+$handler->display->display_options['fields']['nid']['label'] = '';
+$handler->display->display_options['fields']['nid']['exclude'] = TRUE;
+$handler->display->display_options['fields']['nid']['element_label_colon'] = FALSE;
+/* Field: Content: Title */
+$handler->display->display_options['fields']['title']['id'] = 'title';
+$handler->display->display_options['fields']['title']['table'] = 'node';
+$handler->display->display_options['fields']['title']['field'] = 'title';
+$handler->display->display_options['fields']['title']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['title']['label'] = '';
+$handler->display->display_options['fields']['title']['alter']['make_link'] = TRUE;
+$handler->display->display_options['fields']['title']['alter']['path'] = 'node/[nid]';
+$handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
+$handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
+$handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['title']['link_to_node'] = FALSE;
+$handler->display->display_options['defaults']['filter_groups'] = FALSE;
+$handler->display->display_options['defaults']['filters'] = FALSE;
+/* Filter criterion: Content: Published */
+$handler->display->display_options['filters']['status']['id'] = 'status';
+$handler->display->display_options['filters']['status']['table'] = 'node';
+$handler->display->display_options['filters']['status']['field'] = 'status';
+$handler->display->display_options['filters']['status']['value'] = 1;
+$handler->display->display_options['filters']['status']['group'] = 1;
+$handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
+/* Filter criterion: Content: Type */
+$handler->display->display_options['filters']['type']['id'] = 'type';
+$handler->display->display_options['filters']['type']['table'] = 'node';
+$handler->display->display_options['filters']['type']['field'] = 'type';
+$handler->display->display_options['filters']['type']['value'] = array(
+  'assignment' => 'assignment',
+);
+/* Filter criterion: Date: Date (node) */
+$handler->display->display_options['filters']['date_filter']['id'] = 'date_filter';
+$handler->display->display_options['filters']['date_filter']['table'] = 'node';
+$handler->display->display_options['filters']['date_filter']['field'] = 'date_filter';
+$handler->display->display_options['filters']['date_filter']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['filters']['date_filter']['exposed'] = TRUE;
+$handler->display->display_options['filters']['date_filter']['expose']['operator_id'] = 'date_filter_op';
+$handler->display->display_options['filters']['date_filter']['expose']['operator'] = 'date_filter_op';
+$handler->display->display_options['filters']['date_filter']['expose']['identifier'] = 'date_filter';
+$handler->display->display_options['filters']['date_filter']['expose']['remember_roles'] = array(
+  2 => '2',
+  1 => 0,
+  3 => 0,
+  4 => 0,
+  5 => 0,
+  6 => 0,
+);
+$handler->display->display_options['filters']['date_filter']['group_info']['label'] = 'Date (node)';
+$handler->display->display_options['filters']['date_filter']['group_info']['identifier'] = 'date_filter';
+$handler->display->display_options['filters']['date_filter']['group_info']['remember'] = FALSE;
+$handler->display->display_options['filters']['date_filter']['group_info']['group_items'] = array(
+  1 => array(),
+  2 => array(),
+  3 => array(),
+);
+$handler->display->display_options['filters']['date_filter']['granularity'] = 'month';
+$handler->display->display_options['filters']['date_filter']['year_range'] = '-3:+0';
+$handler->display->display_options['filters']['date_filter']['date_fields'] = array(
+  'field_data_field_assignment_due_date.field_assignment_due_date_value' => 'field_data_field_assignment_due_date.field_assignment_due_date_value',
+);
+/* Filter criterion: Content: Body (body) */
+$handler->display->display_options['filters']['body_value']['id'] = 'body_value';
+$handler->display->display_options['filters']['body_value']['table'] = 'field_data_body';
+$handler->display->display_options['filters']['body_value']['field'] = 'body_value';
+$handler->display->display_options['filters']['body_value']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['filters']['body_value']['operator'] = 'contains';
+$handler->display->display_options['filters']['body_value']['exposed'] = TRUE;
+$handler->display->display_options['filters']['body_value']['expose']['operator_id'] = 'body_value_op';
+$handler->display->display_options['filters']['body_value']['expose']['operator'] = 'body_value_op';
+$handler->display->display_options['filters']['body_value']['expose']['identifier'] = 'body_value';
+$handler->display->display_options['filters']['body_value']['expose']['remember_roles'] = array(
+  2 => '2',
+  1 => 0,
+  3 => 0,
+  4 => 0,
+  5 => 0,
+  6 => 0,
+);
+/* Filter criterion: Content: Status (field_assignment_set_status) */
+$handler->display->display_options['filters']['field_assignment_set_status_value']['id'] = 'field_assignment_set_status_value';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['table'] = 'field_data_field_assignment_set_status';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['field'] = 'field_assignment_set_status_value';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['value'] = array(
+  0 => '0',
+);
+$handler->display->display_options['filters']['field_assignment_set_status_value']['exposed'] = TRUE;
+$handler->display->display_options['filters']['field_assignment_set_status_value']['expose']['operator_id'] = 'field_assignment_set_status_value_op';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['expose']['operator'] = 'field_assignment_set_status_value_op';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['expose']['identifier'] = 'field_assignment_set_status_value';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['expose']['remember_roles'] = array(
+  2 => '2',
+  1 => 0,
+  3 => 0,
+  4 => 0,
+  5 => 0,
+  6 => 0,
+);
+/* Filter criterion: Content: Status (field_assignment_status) */
+$handler->display->display_options['filters']['field_assignment_status_tid']['id'] = 'field_assignment_status_tid';
+$handler->display->display_options['filters']['field_assignment_status_tid']['table'] = 'field_data_field_assignment_status';
+$handler->display->display_options['filters']['field_assignment_status_tid']['field'] = 'field_assignment_status_tid';
+$handler->display->display_options['filters']['field_assignment_status_tid']['value'] = array(
+  101 => '101',
+);
+$handler->display->display_options['filters']['field_assignment_status_tid']['exposed'] = TRUE;
+$handler->display->display_options['filters']['field_assignment_status_tid']['expose']['operator_id'] = 'field_assignment_status_tid_op';
+$handler->display->display_options['filters']['field_assignment_status_tid']['expose']['operator'] = 'field_assignment_status_tid_op';
+$handler->display->display_options['filters']['field_assignment_status_tid']['expose']['identifier'] = 'field_assignment_status_tid';
+$handler->display->display_options['filters']['field_assignment_status_tid']['expose']['remember_roles'] = array(
+  2 => '2',
+  1 => 0,
+  3 => 0,
+  4 => 0,
+  5 => 0,
+  6 => 0,
+);
+$handler->display->display_options['filters']['field_assignment_status_tid']['type'] = 'select';
+$handler->display->display_options['filters']['field_assignment_status_tid']['vocabulary'] = 'status_assignment';
+$handler->display->display_options['block_description'] = 'My Homework';
+
+/* Display: Homework Due sideblock */
+$handler = $view->new_display('block', 'Homework Due sideblock', 'homework_due_sidebar');
+$handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
+$handler->display->display_options['defaults']['access'] = FALSE;
+$handler->display->display_options['access']['type'] = 'perm';
+$handler->display->display_options['access']['perm'] = 'access teacher dashboard';
+$handler->display->display_options['defaults']['empty'] = FALSE;
+$handler->display->display_options['defaults']['fields'] = FALSE;
+/* Field: Content: Due date */
+$handler->display->display_options['fields']['field_assignment_due_date']['id'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['table'] = 'field_data_field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['field'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_due_date']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_due_date']['exclude'] = TRUE;
+$handler->display->display_options['fields']['field_assignment_due_date']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_due_date']['type'] = 'counter_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['settings'] = array(
+  'format_type' => 'long',
+  'fromto' => 'both',
+  'multiple_number' => '',
+  'multiple_from' => '',
+  'multiple_to' => '',
+);
+/* Field: Content: Nid */
+$handler->display->display_options['fields']['nid']['id'] = 'nid';
+$handler->display->display_options['fields']['nid']['table'] = 'node';
+$handler->display->display_options['fields']['nid']['field'] = 'nid';
+$handler->display->display_options['fields']['nid']['label'] = '';
+$handler->display->display_options['fields']['nid']['exclude'] = TRUE;
+$handler->display->display_options['fields']['nid']['element_label_colon'] = FALSE;
+/* Field: Content: Title */
+$handler->display->display_options['fields']['title']['id'] = 'title';
+$handler->display->display_options['fields']['title']['table'] = 'node';
+$handler->display->display_options['fields']['title']['field'] = 'title';
+$handler->display->display_options['fields']['title']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['title']['label'] = '';
+$handler->display->display_options['fields']['title']['exclude'] = TRUE;
+$handler->display->display_options['fields']['title']['alter']['make_link'] = TRUE;
+$handler->display->display_options['fields']['title']['alter']['path'] = 'node/[nid]';
+$handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['title']['link_to_node'] = FALSE;
+/* Field: Content: Subject */
+$handler->display->display_options['fields']['field_assignment_subject']['id'] = 'field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['table'] = 'field_data_field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['field'] = 'field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_subject']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_subject']['alter']['alter_text'] = TRUE;
+$handler->display->display_options['fields']['field_assignment_subject']['alter']['text'] = '<span class="label label-important">[field_assignment_due_date]</span> [title] ([field_assignment_subject])';
+$handler->display->display_options['fields']['field_assignment_subject']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_subject']['settings'] = array(
+  'link' => 0,
+);
+$handler->display->display_options['block_description'] = 'homework due sideblock';
+
+/* Display: Homework Assignment Set Sidebar */
+$handler = $view->new_display('block', 'Homework Assignment Set Sidebar', 'homework_assignment_set_sidebar');
+$handler->display->display_options['defaults']['title'] = FALSE;
+$handler->display->display_options['title'] = 'Homework Assignment Set Sidebar';
+$handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
+$handler->display->display_options['defaults']['access'] = FALSE;
+$handler->display->display_options['access']['type'] = 'perm';
+$handler->display->display_options['access']['perm'] = 'access teacher dashboard';
+$handler->display->display_options['defaults']['pager'] = FALSE;
+$handler->display->display_options['pager']['type'] = 'none';
+$handler->display->display_options['pager']['options']['offset'] = '0';
+$handler->display->display_options['defaults']['style_plugin'] = FALSE;
+$handler->display->display_options['style_plugin'] = 'list';
+$handler->display->display_options['style_options']['grouping'] = array(
+  0 => array(
+    'field' => 'field_assignment_grade',
+    'rendered' => 1,
+    'rendered_strip' => 0,
+  ),
+);
+$handler->display->display_options['defaults']['style_options'] = FALSE;
+$handler->display->display_options['defaults']['row_plugin'] = FALSE;
+$handler->display->display_options['row_plugin'] = 'fields';
+$handler->display->display_options['defaults']['row_options'] = FALSE;
+$handler->display->display_options['defaults']['empty'] = FALSE;
+$handler->display->display_options['defaults']['relationships'] = FALSE;
+$handler->display->display_options['defaults']['fields'] = FALSE;
+/* Field: Content: Title */
+$handler->display->display_options['fields']['title']['id'] = 'title';
+$handler->display->display_options['fields']['title']['table'] = 'node';
+$handler->display->display_options['fields']['title']['field'] = 'title';
+$handler->display->display_options['fields']['title']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['title']['label'] = '';
+$handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
+$handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
+$handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+/* Field: Content: Grade */
+$handler->display->display_options['fields']['field_assignment_grade']['id'] = 'field_assignment_grade';
+$handler->display->display_options['fields']['field_assignment_grade']['table'] = 'field_data_field_assignment_grade';
+$handler->display->display_options['fields']['field_assignment_grade']['field'] = 'field_assignment_grade';
+$handler->display->display_options['fields']['field_assignment_grade']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_grade']['exclude'] = TRUE;
+$handler->display->display_options['fields']['field_assignment_grade']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_grade']['settings'] = array(
+  'link' => 0,
+);
+$handler->display->display_options['defaults']['filter_groups'] = FALSE;
+$handler->display->display_options['defaults']['filters'] = FALSE;
+/* Filter criterion: Content: Published */
+$handler->display->display_options['filters']['status']['id'] = 'status';
+$handler->display->display_options['filters']['status']['table'] = 'node';
+$handler->display->display_options['filters']['status']['field'] = 'status';
+$handler->display->display_options['filters']['status']['value'] = 1;
+$handler->display->display_options['filters']['status']['group'] = 1;
+$handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
+/* Filter criterion: Content: Type */
+$handler->display->display_options['filters']['type']['id'] = 'type';
+$handler->display->display_options['filters']['type']['table'] = 'node';
+$handler->display->display_options['filters']['type']['field'] = 'type';
+$handler->display->display_options['filters']['type']['value'] = array(
+  'assignment_set' => 'assignment_set',
+);
+$handler->display->display_options['filters']['type']['group'] = 1;
+$handler->display->display_options['block_description'] = 'Homework Assignment Set Sidebar';
+
+/* Display: All Homework */
+$handler = $view->new_display('block', 'All Homework', 'all_homework_admin_dashboard');
+$handler->display->display_options['defaults']['title'] = FALSE;
+$handler->display->display_options['title'] = 'All Homework';
+$handler->display->display_options['defaults']['use_ajax'] = FALSE;
+$handler->display->display_options['use_ajax'] = TRUE;
+$handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
+$handler->display->display_options['defaults']['access'] = FALSE;
+$handler->display->display_options['access']['type'] = 'perm';
+$handler->display->display_options['access']['perm'] = 'access admin dashboard';
+$handler->display->display_options['defaults']['exposed_form'] = FALSE;
+$handler->display->display_options['exposed_form']['type'] = 'basic';
+$handler->display->display_options['exposed_form']['options']['submit_button'] = 'Search';
+$handler->display->display_options['defaults']['pager'] = FALSE;
+$handler->display->display_options['pager']['type'] = 'full';
+$handler->display->display_options['pager']['options']['items_per_page'] = '30';
+$handler->display->display_options['pager']['options']['offset'] = '0';
+$handler->display->display_options['pager']['options']['id'] = '0';
+$handler->display->display_options['pager']['options']['quantity'] = '9';
+$handler->display->display_options['pager']['options']['tags']['previous'] = '';
+$handler->display->display_options['pager']['options']['tags']['last'] = '';
+$handler->display->display_options['defaults']['fields'] = FALSE;
+/* Field: Content: Due date */
+$handler->display->display_options['fields']['field_assignment_due_date_1']['id'] = 'field_assignment_due_date_1';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['table'] = 'field_data_field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['field'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_due_date_1']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_due_date_1']['hide_empty'] = TRUE;
+$handler->display->display_options['fields']['field_assignment_due_date_1']['settings'] = array(
+  'format_type' => 'druedu_date_and_month',
+  'fromto' => 'both',
+  'multiple_number' => '',
+  'multiple_from' => '',
+  'multiple_to' => '',
+);
+/* Field: Content: Due date */
+$handler->display->display_options['fields']['field_assignment_due_date']['id'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['table'] = 'field_data_field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['field'] = 'field_assignment_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_due_date']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_due_date']['alter']['text'] = '<span>';
+$handler->display->display_options['fields']['field_assignment_due_date']['element_type'] = 'span';
+$handler->display->display_options['fields']['field_assignment_due_date']['element_class'] = 'due label label-due';
+$handler->display->display_options['fields']['field_assignment_due_date']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_due_date']['hide_empty'] = TRUE;
+$handler->display->display_options['fields']['field_assignment_due_date']['type'] = 'counter_due_date';
+$handler->display->display_options['fields']['field_assignment_due_date']['settings'] = array(
+  'format_type' => 'long',
+  'fromto' => '',
+  'multiple_number' => '',
+  'multiple_from' => '',
+  'multiple_to' => '',
+);
+/* Field: Content: Subject */
+$handler->display->display_options['fields']['field_assignment_subject']['id'] = 'field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['table'] = 'field_data_field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['field'] = 'field_assignment_subject';
+$handler->display->display_options['fields']['field_assignment_subject']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['field_assignment_subject']['label'] = '';
+$handler->display->display_options['fields']['field_assignment_subject']['alter']['alter_text'] = TRUE;
+$handler->display->display_options['fields']['field_assignment_subject']['alter']['text'] = '[field_assignment_subject] /';
+$handler->display->display_options['fields']['field_assignment_subject']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['field_assignment_subject']['settings'] = array(
+  'link' => 0,
+);
+/* Field: User: Title */
+$handler->display->display_options['fields']['field_title']['id'] = 'field_title';
+$handler->display->display_options['fields']['field_title']['table'] = 'field_data_field_title';
+$handler->display->display_options['fields']['field_title']['field'] = 'field_title';
+$handler->display->display_options['fields']['field_title']['relationship'] = 'uid';
+$handler->display->display_options['fields']['field_title']['label'] = '';
+$handler->display->display_options['fields']['field_title']['element_label_colon'] = FALSE;
+/* Field: User: Lastname */
+$handler->display->display_options['fields']['field_lastname']['id'] = 'field_lastname';
+$handler->display->display_options['fields']['field_lastname']['table'] = 'field_data_field_lastname';
+$handler->display->display_options['fields']['field_lastname']['field'] = 'field_lastname';
+$handler->display->display_options['fields']['field_lastname']['relationship'] = 'uid';
+$handler->display->display_options['fields']['field_lastname']['label'] = '';
+$handler->display->display_options['fields']['field_lastname']['element_label_colon'] = FALSE;
+/* Field: Content: Nid */
+$handler->display->display_options['fields']['nid']['id'] = 'nid';
+$handler->display->display_options['fields']['nid']['table'] = 'node';
+$handler->display->display_options['fields']['nid']['field'] = 'nid';
+$handler->display->display_options['fields']['nid']['label'] = '';
+$handler->display->display_options['fields']['nid']['exclude'] = TRUE;
+$handler->display->display_options['fields']['nid']['element_label_colon'] = FALSE;
+/* Field: Content: Title */
+$handler->display->display_options['fields']['title']['id'] = 'title';
+$handler->display->display_options['fields']['title']['table'] = 'node';
+$handler->display->display_options['fields']['title']['field'] = 'title';
+$handler->display->display_options['fields']['title']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['fields']['title']['label'] = '';
+$handler->display->display_options['fields']['title']['alter']['make_link'] = TRUE;
+$handler->display->display_options['fields']['title']['alter']['path'] = 'node/[nid]';
+$handler->display->display_options['fields']['title']['alter']['word_boundary'] = FALSE;
+$handler->display->display_options['fields']['title']['alter']['ellipsis'] = FALSE;
+$handler->display->display_options['fields']['title']['element_label_colon'] = FALSE;
+$handler->display->display_options['fields']['title']['link_to_node'] = FALSE;
+$handler->display->display_options['defaults']['arguments'] = FALSE;
+$handler->display->display_options['defaults']['filter_groups'] = FALSE;
+$handler->display->display_options['defaults']['filters'] = FALSE;
+/* Filter criterion: Content: Published */
+$handler->display->display_options['filters']['status']['id'] = 'status';
+$handler->display->display_options['filters']['status']['table'] = 'node';
+$handler->display->display_options['filters']['status']['field'] = 'status';
+$handler->display->display_options['filters']['status']['value'] = 1;
+$handler->display->display_options['filters']['status']['group'] = 1;
+$handler->display->display_options['filters']['status']['expose']['operator'] = FALSE;
+/* Filter criterion: Content: Type */
+$handler->display->display_options['filters']['type']['id'] = 'type';
+$handler->display->display_options['filters']['type']['table'] = 'node';
+$handler->display->display_options['filters']['type']['field'] = 'type';
+$handler->display->display_options['filters']['type']['value'] = array(
+  'assignment' => 'assignment',
+);
+/* Filter criterion: Date: Date (node) */
+$handler->display->display_options['filters']['date_filter']['id'] = 'date_filter';
+$handler->display->display_options['filters']['date_filter']['table'] = 'node';
+$handler->display->display_options['filters']['date_filter']['field'] = 'date_filter';
+$handler->display->display_options['filters']['date_filter']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['filters']['date_filter']['exposed'] = TRUE;
+$handler->display->display_options['filters']['date_filter']['expose']['operator_id'] = 'date_filter_op';
+$handler->display->display_options['filters']['date_filter']['expose']['operator'] = 'date_filter_op';
+$handler->display->display_options['filters']['date_filter']['expose']['identifier'] = 'date_filter';
+$handler->display->display_options['filters']['date_filter']['expose']['remember_roles'] = array(
+  2 => '2',
+  1 => 0,
+  3 => 0,
+  4 => 0,
+  5 => 0,
+  6 => 0,
+);
+$handler->display->display_options['filters']['date_filter']['group_info']['label'] = 'Date (node)';
+$handler->display->display_options['filters']['date_filter']['group_info']['identifier'] = 'date_filter';
+$handler->display->display_options['filters']['date_filter']['group_info']['remember'] = FALSE;
+$handler->display->display_options['filters']['date_filter']['group_info']['group_items'] = array(
+  1 => array(),
+  2 => array(),
+  3 => array(),
+);
+$handler->display->display_options['filters']['date_filter']['granularity'] = 'month';
+$handler->display->display_options['filters']['date_filter']['year_range'] = '-3:+0';
+$handler->display->display_options['filters']['date_filter']['date_fields'] = array(
+  'field_data_field_assignment_due_date.field_assignment_due_date_value' => 'field_data_field_assignment_due_date.field_assignment_due_date_value',
+);
+/* Filter criterion: Content: Body (body) */
+$handler->display->display_options['filters']['body_value']['id'] = 'body_value';
+$handler->display->display_options['filters']['body_value']['table'] = 'field_data_body';
+$handler->display->display_options['filters']['body_value']['field'] = 'body_value';
+$handler->display->display_options['filters']['body_value']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['filters']['body_value']['operator'] = 'contains';
+$handler->display->display_options['filters']['body_value']['exposed'] = TRUE;
+$handler->display->display_options['filters']['body_value']['expose']['operator_id'] = 'body_value_op';
+$handler->display->display_options['filters']['body_value']['expose']['operator'] = 'body_value_op';
+$handler->display->display_options['filters']['body_value']['expose']['identifier'] = 'body_value';
+$handler->display->display_options['filters']['body_value']['expose']['remember_roles'] = array(
+  2 => '2',
+  1 => 0,
+  3 => 0,
+  4 => 0,
+  5 => 0,
+  6 => 0,
+);
+/* Filter criterion: Content: Status (field_assignment_set_status) */
+$handler->display->display_options['filters']['field_assignment_set_status_value']['id'] = 'field_assignment_set_status_value';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['table'] = 'field_data_field_assignment_set_status';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['field'] = 'field_assignment_set_status_value';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['relationship'] = 'field_assignments_set_referenced_target_id';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['exposed'] = TRUE;
+$handler->display->display_options['filters']['field_assignment_set_status_value']['expose']['operator_id'] = 'field_assignment_set_status_value_op';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['expose']['operator'] = 'field_assignment_set_status_value_op';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['expose']['identifier'] = 'field_assignment_set_status_value';
+$handler->display->display_options['filters']['field_assignment_set_status_value']['expose']['remember_roles'] = array(
+  2 => '2',
+  1 => 0,
+  3 => 0,
+  4 => 0,
+  5 => 0,
+  6 => 0,
+);
+/* Filter criterion: Content: Status (field_assignment_status) */
+$handler->display->display_options['filters']['field_assignment_status_tid']['id'] = 'field_assignment_status_tid';
+$handler->display->display_options['filters']['field_assignment_status_tid']['table'] = 'field_data_field_assignment_status';
+$handler->display->display_options['filters']['field_assignment_status_tid']['field'] = 'field_assignment_status_tid';
+$handler->display->display_options['filters']['field_assignment_status_tid']['exposed'] = TRUE;
+$handler->display->display_options['filters']['field_assignment_status_tid']['expose']['operator_id'] = 'field_assignment_status_tid_op';
+$handler->display->display_options['filters']['field_assignment_status_tid']['expose']['operator'] = 'field_assignment_status_tid_op';
+$handler->display->display_options['filters']['field_assignment_status_tid']['expose']['identifier'] = 'field_assignment_status_tid';
+$handler->display->display_options['filters']['field_assignment_status_tid']['expose']['remember_roles'] = array(
+  2 => '2',
+  1 => 0,
+  3 => 0,
+  4 => 0,
+  5 => 0,
+  6 => 0,
+);
+$handler->display->display_options['filters']['field_assignment_status_tid']['type'] = 'select';
+$handler->display->display_options['filters']['field_assignment_status_tid']['vocabulary'] = 'status_assignment';
+$handler->display->display_options['block_description'] = 'All Homework';

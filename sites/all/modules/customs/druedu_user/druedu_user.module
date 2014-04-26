@@ -1,0 +1,574 @@
+<?php
+
+/**
+ * @file
+ * Enable users to create and manage groups with roles and permissions.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function druedu_user_menu() {
+ $items = array();
+ $items['admin/config/druedu/advanced_membership_management'] = array(
+    'title' => 'Advanced membership management',
+    'description' => 'Configuration of groups membership.',
+    'page callback' => 'druedu_user_admin',
+    'access arguments' => array('administer users'),
+    'file' => 'druedu_user.admin.inc',
+ );
+ $items['admin/people/advanced_membership_management'] = array(
+    'title' => 'Advanced membership management',
+    'page callback' => 'druedu_user_admin',
+    'access arguments' => array('administer users'),
+    'file' => 'druedu_user.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 10,
+  );
+	$items['admin/people/advanced_membership_management/school'] = array(
+		'title' => 'School group administration',
+		'page callback' => 'druedu_user_admin',
+    'access arguments' => array('administer users'),
+    'file' => 'druedu_user.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,
+	);
+ $items['admin/people/advanced_membership_management/public'] = array(
+    'title' => 'Public group administration',
+    'page callback' => 'druedu_user_public',
+    'access arguments' => array('administer users'),
+    'file' => 'druedu_user.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
+  );
+ $items['admin/advanced_membership_management/public/autocomplete'] = array(
+    'title' => 'User autocomplete',
+    'page callback' => '_ajax_public_autocomplete',
+    'access arguments' => array('administer users'),
+    'type' => MENU_CALLBACK,
+    'file' => 'druedu_user.admin.inc',
+  );
+  $items['admin/advanced_membership_management/school/autocomplete'] = array(
+    'title' => 'User autocomplete',
+    'page callback' => '_ajax_member_autocomplete',
+    'access arguments' => array('administer users'),
+    'type' => MENU_CALLBACK,
+    'file' => 'druedu_user.admin.inc',
+  );
+
+   $items['groups/%node/add-user/%user/nojs'] = array(
+      'title' => 'Submission',
+      'page callback' => 'druedu_user_group_add_user',
+      'page arguments' => array(1, 3, 4),
+      'access callback' => 'node_access',
+      'access arguments' => array('view', 1),
+      'weight' => 0,
+      'type' => MENU_CALLBACK,
+  );    
+
+  $items['groups/%node/add-user/%user/ajax'] = array(
+    'delivery callback' => 'ajax_deliver',
+  ) + $items['groups/%node/add-user/%user/nojs'];
+
+  $items['groups/%node/remove-user/nojs'] = array(
+      'title' => 'Submission',
+      'page callback' => 'druedu_user_group_remove_user',
+      'page arguments' => array(1, 3),
+      'access callback' => 'node_access',
+      'access arguments' => array('view', 1),
+      'weight' => 0,
+      'type' => MENU_CALLBACK,
+  );    
+
+  $items['groups/%node/remove-user/ajax'] = array(
+    'delivery callback' => 'ajax_deliver',
+  ) + $items['groups/%node/remove-user/nojs'];
+
+
+  $items['groups/%node/nojs'] = array(
+      'title' => 'Submission',
+      'page callback' => 'druedu_user_group_info_callback',
+      'page arguments' => array(2, 1),
+      'access callback' => 'node_access',
+      'access arguments' => array('view', 1),
+      'weight' => 0,
+      'type' => MENU_CALLBACK,
+  );    
+
+  $items['groups/%node/ajax'] = array(
+    'delivery callback' => 'ajax_deliver',
+  ) + $items['groups/%node/nojs'];
+
+   $items['user/%user/preferences'] = array(
+    'title' => 'Preferences',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('druedu_user_preferences_form'),
+    'access callback' => 'user_edit_access',
+    'access arguments' => array(1),
+    'file' => 'druedu_user.pages.inc',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 3,
+  );
+
+	return $items;
+}
+/**
+ * Implements hook_init().
+ */
+function druedu_user_init() {
+  if(current_path() =='admin/config/druedu/advanced_membership_management'){
+    drupal_goto('admin/people/advanced_membership_management');
+  }
+}
+
+function druedu_user_views_pre_view(&$view, &$display_id, &$args) {
+  if($display_id = 'user_group_page' && $view->name == 'og_user_groups') {
+    drupal_add_js(drupal_get_path('module', 'druedu_user') .'/js/druedu_user.groups-page.js');
+  }
+}
+
+/** Implementation of hook_theme
+ *
+ */
+function druedu_user_theme($existing, $type, $theme, $path) {
+
+  return array(
+    'my_public_group' => array(
+      'template' => 'my-public-group',
+      'arguments' => array('content_group' => null),
+      'path' => drupal_get_path('module', 'druedu_user')."/templates",
+    ),
+  );
+}
+
+function druedu_user_group_remove_user($node, $ajax) {
+  global $user;
+  if(is_object($node)) {
+    $nid =  $node->nid;
+  }
+  else {
+    $node = node_load($node);
+    $nid = $node;
+  }
+  og_ungroup('node', $node->nid, 'user', $user->uid);
+  drupal_set_message(t('Unsubscription to'). ' ' . $node->title . ' ' . t('saved') . '.');
+  $is_ajax = $ajax === 'ajax';
+  if ($is_ajax) {
+    $content_group['subscribe'] = FALSE;
+    $content_group['class'] = t('subscribe');
+    $content_group['nid'] = $node->nid;
+    $content_group['title'] = l($node->title, 'groups/'.$node->nid.'/nojs', array('attributes' => array('class' => array('use-ajax'))));
+    $image_field = field_view_field('node', $node, 'field_group_picture');
+    $image_path = file_create_url($image_field['#items'][0]['uri']);
+    $content_group['image'] = l('<img src="'.$image_path.'">', 'groups/'.$node->nid.'/nojs', array('html' => TRUE, 'attributes' => array('class' => array('use-ajax'))));
+    $content_prefix = '<li class="'.$content_group['class'] . ' ' . $content_group['nid'].' group">'; 
+    $content_suffix = '</li>'; 
+    /* AJAX RENDER */
+    $commands = array();
+      $commands[] = ajax_command_remove('.system-messages');
+      $commands[] = ajax_command_before('#main-menu', theme('status_messages'));
+      $commands[] = ajax_command_remove('ul li.group.'.$node->nid);
+      $commands[] = ajax_command_append('.view-id-og_user_groups.view-display-id-all_public_groups_block ul', $content_prefix.theme('my_public_group', array('content_group' => $content_group)).$content_suffix);
+      $commands[] = ajax_command_invoke(NULL, 'prepareGroupUnsubscribed');  
+    return array(
+      '#type' => 'ajax',
+      '#commands' => $commands,
+    );
+  }
+  else {
+    drupal_goto('groups', array(), 301);
+  }
+}
+
+function druedu_user_group_add_user($node, $user, $ajax) {
+  if(is_object($node)) {
+    $nid =  $node->nid;
+  }
+  else {
+    $node = node_load($node);
+    $nid = $node;
+  }
+  $values = array(
+    'entity_type' => 'user',
+    'entity' => $user,
+    'field_name' => FALSE,
+    'state' => OG_STATE_ACTIVE,
+  );
+  og_group('node', $node, $values);
+  drupal_set_message(t('Welcome to'). ' ' . $node->title . ' ' . t('group') . '.');
+  $is_ajax = $ajax === 'ajax';
+  if ($is_ajax) {
+    $content_group['subscribe'] = TRUE;
+    $content_group['unsubscribe_link'] = l(t('UNSUBSCRIBE'), 'groups/'.$node->nid.'/remove-user/nojs', array('attributes' => array('class' => array('use-ajax'))));
+    $content_group['class'] = t('public');
+    $content_group['nid'] = $node->nid;
+    $content_group['title'] = l($node->title, 'node/'.$node->nid);
+    $image_field = field_view_field('node', $node, 'field_group_picture');
+    $image_path = file_create_url($image_field['#items'][0]['uri']);
+    $content_group['image'] = l('<img src="'.$image_path.'">', 'node/'.$node->nid, array('html' => TRUE));
+    $content_prefix = '<li class="'.$content_group['class'] . ' ' . $content_group['nid'].' group">'; 
+    $content_suffix = '</li>'; 
+    /* AJAX RENDER */
+    $commands = array();  
+      $commands[] = ajax_command_remove('.system-messages');
+      $commands[] = ajax_command_before('#main-menu', theme('status_messages'));
+      $commands[] = ajax_command_remove('ul li.group.'.$node->nid);
+      $commands[] = ajax_command_invoke(NULL, 'prepareGroupSubscribed');
+      $commands[] = ajax_command_append('ul.my_public_groups', $content_prefix.theme('my_public_group', array('content_group' => $content_group))); 
+    return array(
+      '#type' => 'ajax',
+      '#commands' => $commands,
+    );
+  }
+  else {
+
+    drupal_goto('groups', array(), 301);
+  }
+}
+
+function druedu_user_group_info_callback($ajax, $node) {
+  $is_ajax = $ajax === 'ajax';
+  if(is_object($node)) {
+    $nid =  $node->nid;
+  }
+  else {
+    $node = node_load($node);
+    $nid = $node;
+  }
+
+  if ($is_ajax) {
+    global $base_url;
+    global $user;
+    /* PREPARE VALUE */
+    $output_header = t('Join') . ' ' . $node->title . ' ?';
+    $output_body = '';
+    $output_footer = '<a class="btn btn-danger use-ajax" href="'.$base_url.'/groups/'.$nid.'/add-user/'.$user->uid.'/nojs">'.t('Yes').'</a><a class="btn no" href="">'.t('Cancel').'</a>';
+
+    /* AJAX RENDER */
+    $commands = array();   
+    $commands[] = ajax_command_append('body', 
+      '<div class="modal fade" id="groups-modal" role="dialog" aria-labelledby="GroupsLabel" aria-hidden="false">'
+            .   '<div class="modal-header">'
+                  . '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>'
+                  .   '<h3 id="GroupsLabel">' . $output_header . '</h3>'
+            . '</div>'// modal-header 
+            //. '<div class="modal-body">' . $output_body . '</div>'//<!-- modal-body -->
+            . '<div class="modal-footer">' . $output_footer . '</div>'//<!-- modal-body -->
+          . '</div>');  
+    $commands[] = ajax_command_invoke(NULL, 'prepareModal');
+    return array(
+      '#type' => 'ajax',
+      '#commands' => $commands,
+    );
+  }
+  else {
+    drupal_goto('node/'.$nid, array(), 301);
+  }
+}
+/**
+ * Implements hook_form_alter().
+ */
+function druedu_user_form_alter(&$form, &$form_state, $form_id) {
+  //dpm($form);
+	if($form_id == 'druedu_user_user_admin_form' || $form_id == 'druedu_public_admin_form'){
+		  //dpm($form);
+    drupal_add_css(drupal_get_path('module', 'druedu_user').'/css/admin_og.css','file');
+	}
+  // if(arg(1) == 'advanced_membership_management'){
+  //   if($form_id == 'class_node_form' || $form_id == 'group_node_form' || $form_id == 'subject_node_form' ){
+  //     unset($form['body']);
+  //   }
+  // }
+}
+
+
+/**
+ * Get all nodes of the specific group.
+ * $grade : node type or grade nid.
+ * $grade (string) : get_all_nodes_by_group_name()
+ * $grade (int) :  ( int int int ) get all nodes of the deeper one group content.
+ *
+ * get_nodes_by_group_type($group_type)
+ * @ $grade == $group_type
+ */
+function druedu_user_get_nodes_by_group($grade, $subject = null, $class = null, $grade_group_content = 'subject', $subject_group_content = 'class') {
+  if(is_numeric($grade)) {
+    $node_type = $grade_group_content;
+    $gid = $grade;
+    $field_name = 'og_node';
+    if(is_numeric($subject)) {
+      $node_type = $subject_group_content;
+      $gid = $subject;
+      $field_name = 'field_subjects_groups_audience';
+    }
+    if(is_numeric($class)) {
+      $node_type = 'node';
+      $gid = $class;
+      $field_name = 'og_node2';
+    }
+    $query = db_select('og_membership', 'og');
+    $query->join('node','n','n.nid = og.etid');
+    $nids = $query
+      ->fields('og', array('etid'))//nid
+      ->condition('og.gid ',$gid)
+      ->condition('n.type ',$node_type)
+      ->condition('og.entity_type','node')
+      ->condition('og.group_type','node')
+      //->condition('field_name',$field_name)
+      
+      ->condition('og.state',1)
+      ->orderBy('og.created ', 'ASC')
+      ->execute()
+      ->fetchCol();
+    $nodes = node_load_multiple($nids);
+  
+    return $nodes ? $nodes : array();
+  }elseif(is_string($grade)) { 
+    $node_type = $grade;
+    $query = db_select('node', 'n');
+  
+    $nids = $query
+      ->fields('n', array('nid'))
+      ->condition('n.type',$node_type)
+      ->orderBy('n.changed', 'ASC')
+      ->execute()
+      ->fetchCol();
+    $nodes = node_load_multiple($nids);
+    return $nodes ? $nodes : array();
+  }
+}
+
+/**
+ * get users of a group by gid.
+ * 
+ * @param $grade int
+ *   group type = grade. or a public group gid.
+ * 
+ * @param $subject int
+ *  
+ * @param $admin default all
+ * if admin ,return all Potential administrators with premission of user_access('allow group admin')
+ * if user
+ *  $result = db_query("SELECT rid, permission FROM {role_permission} WHERE rid IN (:fetch)", array(':fetch' => $fetch));
+ * 
+ * @see druedu_user_permission()
+ * $potential 
+ * true ,potential members who are not in the group.
+ * default false,the members of the specific group.
+ */
+ 
+function druedu_user_get_users_by_group($grade, $subject = NULL, $class = NULL,$type = 'all',$potential=FALSE) {
+  $join = db_select('og_membership');
+  $join->fields('og_membership');
+  $join->condition('entity_type', 'user');
+  $operator = '=';
+  if($potential) {
+    $operator = '<>';
+  }
+  if(is_null($class) && is_null($subject)) {
+    $join->condition('gid', $grade, $operator);
+  }
+  elseif(is_null($class)) {
+    $join->condition('gid', $subject, $operator);
+  }
+  else {
+    $join->condition('gid', $class, $operator);
+  }
+    //select only user with role
+  //@TODO add permission
+  /*$role = db_select('users_roles');
+  $role->fields('users_roles');
+  if(!is_null($role)) {
+    $role->condition('rid', $role);
+  }
+  $join->join($role, 'users_roles', 'og_membership.etid = users_roles.uid');*/
+  $query = db_select('users','users');
+
+  $query->join($join, 'og_membership', 'users.uid = og_membership.etid');
+  
+  if($type <> 'all') {
+    $query->join('users_roles', 'ur', 'users.uid = ur.uid');
+    
+    $join = db_select('role_permission');
+    $join->fields('role_permission');
+    $join->condition('module', 'druedu_user');
+    $operator = NULL;
+    if($type == 'user') {
+      $operator = '<>';
+    }elseif($type == 'admin') {
+      $operator = 'LIKE';
+    }
+    $join->condition('permission', 'allow group admin', $operator);
+    
+    $query->join($join, 'role_permission', 'ur.rid = role_permission.rid');
+  }
+
+  
+  $query->fields('users', array('uid', 'name'));
+  $query->condition('users.status', '1');
+  $query->orderBy('users.uid', 'ASC');
+  $query->distinct();
+  $result = $query->execute();       
+  $array_result = array();
+  while($record = $result->fetchAssoc()) {
+    $array_result[$record['uid']] = $record['name'];
+  }
+  return $array_result;
+}
+
+function druedu_user_get_users_by_groups($groups) {
+  $join = db_select('og_membership');
+  $join->fields('og_membership');
+  $join->condition('entity_type', 'user');
+  $join->condition('gid', $groups, 'in');
+  $query = db_select('users','users');
+  $query->join($join, 'og_membership', 'users.uid = og_membership.etid');
+  $query->fields('users', array('uid', 'name'));
+  $query->condition('users.status', '1');
+  $query->orderBy('users.uid', 'ASC');
+  $query->distinct();
+  $result = $query->execute();       
+  $array_result = array();
+  while($record = $result->fetchAssoc()) {
+    $array_result[$record['uid']] = $record['name'];
+  }
+  return $array_result;
+}
+
+/**
+ * hook_permission()
+ */
+function druedu_user_permission(){
+  return array(
+    'allow group admin' =>  array(
+      'title' => t('Allowed for group admin'),
+      'description' => t('Will list in Potential administrators of og-groups member admin.'),
+    ),
+  );
+}
+
+function druedu_user_views_query_alter(&$view, &$query) {
+  global $user;
+  if($view->name == 'og_user_groups' && $view->current_display == 'all_public_groups_block'){
+      $snippet = 'node_og_membership.nid NOT IN (SELECT my_group.gid FROM og_membership AS my_group WHERE my_group.etid = :etid AND my_group.entity_type = :entity_type)';
+      $query->add_where_expression('', $snippet, $args = array(':etid' => $user->uid, ':entity_type' => 'user'));
+  }
+}
+
+/**
+* Responds when a OG membership is inserted.
+*
+* This hook is invoked after the OG membership is inserted into the database.
+*
+* @param OgMembership $og_membership
+*   The OG membership that is being inserted.
+*
+* @see hook_entity_insert()
+*/
+// when add a user to group,if has permission'allow group admin',grant admin role.
+function druedu_user_og_membership_insert(OgMembership $og_membership) {
+  //get admin role rid.
+  $uid = $og_membership->etid;
+  $gid = $og_membership->gid;
+  $bundle = node_load($gid)->type;
+  $group_type = 'node';
+  $og_roles = og_roles($group_type, $bundle, $gid , $force_group = FALSE, $include_all = TRUE);
+  foreach ($og_roles as $key => $value) {
+    if($value == 'administrator member') {
+      $admin_rid = $key;
+      break;
+    }
+  }
+  //grant admin role to user have the permission.
+  $member_account = user_load($uid);
+  if(user_access('allow group admin',$member_account)) {
+    og_role_grant($group_type, $gid, $uid, $admin_rid);
+  }
+}
+
+// function druedu_user_og_membership_delete(OgMembership $og_membership) {
+
+// }
+/**
+ * when users' roles, check if the role has permisson of "allow group admin",if yes,set it be the "administrator member"
+ */
+// role been changed, (maybe) permission must be changed.
+function druedu_user_user_update(&$edit, $account, $category) {
+  //roles changed.
+  if(isset($edit['roles'])) {
+    //get all the groups
+    $group_type = 'node';
+    $groups = og_get_groups_by_user($account, $group_type);
+    //foreach groups the user belongs to,check if is_admin.
+    //@see druedu_user_og_membership_insert.
+    foreach ($groups as $key => $gid) {
+      $uid = $account->uid;
+      $bundle = node_load($gid)->type;
+      $og_roles = og_roles($group_type, $bundle, $gid , $force_group = FALSE, $include_all = TRUE);
+      foreach ($og_roles as $key => $value) {
+        if($value == 'administrator member') {
+          $admin_rid = $key;
+          break;
+        }
+      }
+      if(user_access('allow group admin',$account)) {
+        og_role_grant($group_type, $gid, $uid, $admin_rid);
+      }else {
+        og_role_revoke($group_type, $gid, $uid, $admin_rid);
+      }
+
+    }
+  }
+}
+
+function druedu_get_user_preferences($uid = null) {
+  $query = db_select('druedu_user_preference','user_preferences');
+    $query->fields('user_preferences', array('preferences'));
+    if(!is_null($uid)) {
+      $query->condition('uid', $uid);
+    }
+    $result = $query->execute()->fetchAssoc();
+    return $result;
+}
+
+function druedu_set_user_preferences($uid, $preferences, $op) {
+  if(empty($uid)) {
+    watchdog('save user preference', 'User ID incorrect', NULL, WATCHDOG_WARNING);
+    return FALSE;
+  }
+  if(empty($preferences)) {
+    watchdog('save user preference', 'User preferences empty', NULL, WATCHDOG_WARNING);
+    return FALSE;
+  }
+  if($op == 'insert') {
+    druedu_insert_user_preferences($uid, $preferences);
+    return TRUE;
+  }
+  elseif($op == 'update') {
+    druedu_update_user_preferences($uid, $preferences);
+    return TRUE;
+  }
+  else {
+    watchdog('save user preference', 'operation not selected (insert or update)', NULL, WATCHDOG_WARNING);
+    return FALSE;
+  }
+  return FALSE;
+}
+
+function druedu_insert_user_preferences($uid, $preferences) {
+  $query = db_insert('druedu_user_preference')
+  ->fields(array(
+      'uid' => $uid,
+      'preferences' => $preferences,
+  ))
+  ->execute();
+}
+
+function druedu_update_user_preferences($uid, $preferences) {
+  $query = db_update('druedu_user_preference')
+   ->fields(array(
+    'preferences' => $preferences,
+  ))
+  ->condition('uid', $uid)
+  ->execute();
+}

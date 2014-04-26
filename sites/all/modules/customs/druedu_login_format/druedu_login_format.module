@@ -1,0 +1,26 @@
+<?php
+/**
+* @file
+* Enforce users to use a login anme with a specific format
+*/
+
+/**
+* Implements hook_form_FORM_ID_alter()
+* Add a validation function to the user login form
+*/
+function druedu_login_format_form_user_login_alter(&$form, &$form_state) {
+	$form['#validate'][] = 'user_login_enforce_string_dot_string';
+}
+
+/**
+ * A FAPI validate handler. Sets an error if supplied username does not exist and is not of the form string.string.
+ */
+function user_login_enforce_string_dot_string($form, &$form_state) {
+	$explode = explode('.', $form_state['values']['name']);
+	$one_dot = (count($explode) == 2);
+
+	if (isset($form_state['values']['name']) && !user_load_by_name($form_state['values']['name']) && !$one_dot) {
+		// Username doesn't fit the criteria.
+		form_set_error('name', t('The username %name is not valid. It should be of the form "somename.somename"', array('%name' => $form_state['values']['name'])));
+	}
+}

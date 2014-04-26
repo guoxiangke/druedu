@@ -1,0 +1,15 @@
+name = Druedu Notifications Team UI
+description = Notifications UI for notify users who have premission access the content or un-notify some subscribes,both one time.
+core = 7.x
+package = "Notifications"
+dependencies[] = druedu_user
+dependencies[] = notifications_content
+dependencies[] = druedu_notifications
+dependencies[] = views
+
+; Information added by drupal.org packaging script on 2012-05-06
+version = "7.x-3.x-dev"
+core = "7.x"
+project = "notifications_team"
+datestamp = "1336265239"
+

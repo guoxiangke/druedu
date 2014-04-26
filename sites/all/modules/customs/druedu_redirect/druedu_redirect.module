@@ -1,0 +1,140 @@
+<?php
+/**
+ * Implementation of hook_menu().
+ */
+function druedu_redirect_menu() {
+  $items = array();
+
+  $items['admin/config/druedu/druedu_redirect_configure'] = array(
+    'title' => 'Druedu Redirect - Configuration',
+    'description' => 'Configure redirection of content types.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('druedu_redirect_config'),
+    'access arguments' => array('access administration pages'),
+    'file' => 'druedu_redirect.admin.inc',
+  );
+  return $items;
+}
+
+
+/**
+ * Implements hook_theme().
+ */
+function druedu_redirect_theme() {
+  return array(
+    'druedu_redirect_config' => array(
+      'render element' => 'form',
+      'file' => 'druedu_redirect.admin.inc',
+    ),
+  );
+}
+/**
+ * Implements hook_node_delete().
+ */
+function druedu_redirect_node_delete($node) {
+  //druedu_redirect_callback($node, $flag = FALSE);
+  $druedu_redirect_settings = unserialize(variable_get('druedu_redirect_settings', null));
+  $path = isset($druedu_redirect_settings[$node->type])?$druedu_redirect_settings[$node->type]:'<front>';
+  $passby = isset($druedu_redirect_settings[$node->type.'_passby_del'])?$druedu_redirect_settings[$node->type.'_passby_del']:FALSE;
+  if($passby) {
+    return;
+  }
+  $path = drupal_get_normal_path($path);
+  //set redirection
+  //except for answer.
+  if($node->type != 'answer' && $path != '<front>') {
+    $_GET['destination'] = $path;
+  }
+  // else{
+  //   drupal_goto(drupal_get_normal_path(variable_get('site_frontpage', 'node')));
+  // }
+}
+
+/**
+ * Implements hook_node_insert().
+ */
+// function druedu_redirect_node_insert($node) {
+//   $druedu_redirect_settings = unserialize(variable_get('druedu_redirect_settings', null));
+//   $path = isset($druedu_redirect_settings[$node->type])?$druedu_redirect_settings[$node->type]:'<front>';
+//   $path = drupal_get_normal_path($path);dpm($path);
+//   //set redirection
+//   //except for answer.
+//   if($node->type != 'answer' && $path != '<front>') {
+//     $_GET['destination'] = $path;
+//   }
+// }
+
+/**
+ * Implements hook_node_update().
+ */
+function druedu_redirect_node_update($node) {
+  $druedu_redirect_settings = unserialize(variable_get('druedu_redirect_settings', null));
+  $path = isset($druedu_redirect_settings[$node->type.'_update'])?$druedu_redirect_settings[$node->type.'_update']:'node';
+  $passby = isset($druedu_redirect_settings[$node->type.'_passby'])?$druedu_redirect_settings[$node->type.'_passby']:FALSE;
+  if($passby) {
+    return;
+  }
+  $path = drupal_get_normal_path($path);
+  //set redirection
+  //except for answer.
+  if($node->type != 'answer' && $path != 'node') {
+    $_GET['destination'] = $path;
+  }elseif($path == 'node') {
+    $_GET['destination'] = 'node/'.$node->nid;
+  }
+}
+
+/**
+ *  hook_node_type_insert
+ */
+// function druedu_redirect_node_type_insert($info) {
+//   drupal_set_message(t('You have just created a content type with a machine name %type.</br>druedu redirection module setting:<a href="@url">set redirect uri</a>', array('%type' => $info->type,'@url' => url('admin/config/druedu_redirect/configure'))));
+// }
+function druedu_redirect_node_type_delete($info) {
+  $druedu_redirect_settings = variable_get('druedu_redirect_settings',NULL);
+  $druedu_redirect_settings = array_filter(unserialize($druedu_redirect_settings));
+  if($druedu_redirect_settings["$info->type"]) {
+    unset($druedu_redirect_settings["$info->type"]);
+    unset($druedu_redirect_settings["$info->type".'_update']);
+    unset($druedu_redirect_settings["$info->type".'_passby']);
+  }
+  $druedu_redirect_settings = serialize($druedu_redirect_settings);
+  variable_set('druedu_redirect_settings',$druedu_redirect_settings);
+}
+/**
+ * callback by other modules
+ * $content_type or $object with type attribute to provide context.
+ * $flag whether use directly drupal_go() instead of $_GET['destination']
+ */
+function druedu_redirect_callback($node, $flag = TRUE) {
+  if(!is_object($node)) {
+    $temp = $node;
+    $node = new StdClass();
+    $node->type = $temp;
+  }
+  $druedu_redirect_settings = unserialize(variable_get('druedu_redirect_settings', null));
+  //set redirection
+  // update form cancel button
+  if($node->nid){
+    $path = isset($druedu_redirect_settings[$node->type.'_update'])?$druedu_redirect_settings[$node->type.'_update']:'node';
+    $path = drupal_get_normal_path($path);
+    $path = ($path != 'node')?$path:'node/'.$node->nid;
+    if($flag){
+      drupal_goto($path);
+    }
+    $_GET['destination'] = $path;
+    return;
+  }
+  
+  $path = isset($druedu_redirect_settings[$node->type])?$druedu_redirect_settings[$node->type]:'<front>';
+  $path = drupal_get_normal_path($path);
+
+  //except for answer.
+  if($node->type != 'answer') {
+    if($flag){
+      drupal_goto($path);
+    }
+    $_GET['destination'] = $path;
+  }
+}
+?>

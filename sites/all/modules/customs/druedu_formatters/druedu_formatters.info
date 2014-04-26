@@ -1,0 +1,5 @@
+name = Druedu formatters
+description = Add custom formatters to druedu
+core = 7.x
+package = Druedu
+version = "7.x-1.x-dev"

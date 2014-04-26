@@ -1,0 +1,45 @@
+<?php
+/**
+* @file
+* Helper to autocomplete form depending on context (session variables)
+*/
+
+function druedu_prepopulate_form_structure_unit_node_form_alter(&$form, &$form_state) {
+
+	// If we add a new page, create a new book
+	if($form['book']['bid']['#default_value'] == 0) {
+		$form['book']['bid']['#default_value'] = 'new';
+	}
+
+	// Pre-populating Subject Group Audience
+	// Field we want to populate
+	$field = $form['field_subjects_groups_audience'];
+	// Default options of the field
+	$default_options_array = $form['field_subjects_groups_audience'][LANGUAGE_NONE]['#options'];
+	//Array to populate if empty - use a reference
+	$default_values_array = &$form['field_subjects_groups_audience'][LANGUAGE_NONE]['#default_value'];
+
+	if(!empty($field) && isset($default_options_array) && empty($default_values_array)){
+		$subject_context = subject_context();
+		$default_values_array = $subject_context['gid'];
+	}
+
+}
+
+/**
+ * set default value for field_answer,when add a new answer on single_question page...
+ *  answer_node_form
+ * hook_form_BASE_FORM_ID_alter
+ */
+function druedu_prepopulate_form_answer_node_form_alter(&$form, &$form_state) {
+  // Field we want to populate
+  $field = $form['field_answer'];
+  $default_values_array= $form['field_answer'][LANGUAGE_NONE][0]['target_id']['#default_value'];
+  //&& isset($default_options_array)  why ?????
+  if(!empty($field) && empty($default_values_array)){
+    if($form['#node']->type == 'answer'){
+      $question = node_load(arg(1));// only in question/nid page bottom ,but how about node/add/answer/filed_answer=...
+      $form['field_answer'][LANGUAGE_NONE][0]['target_id']['#value'] = $question->title." (".$question->nid.")";
+    }
+  }
+}

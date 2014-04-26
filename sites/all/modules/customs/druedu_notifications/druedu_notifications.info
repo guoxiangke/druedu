@@ -1,0 +1,20 @@
+name =  Druedu Notifications
+description = druedu notifications(ajax subcribe & share)
+core = 7.x
+package = Druedu
+version = "7.x-1.x-dev"
+
+files[] = druedu_notifications.module
+files[] = druedu_notifications.views.inc
+files[] = views_handler_share_a_node.inc
+
+dependencies[] = message_notify
+dependencies[] = messaging_mail
+dependencies[] = notifications_content
+dependencies[] = notifications_user
+dependencies[] = druedu_layout_alter
+
+;dependencies[] = messaging_simple // or dependencies[] = messaging_mail
+;og_notifications //may use
+;dependencies[] = notifications_ui
+//the Message notify, Message, Simple Mail, Messaging, Content Notifications, Notifications, Messaging template, User subscriptions modules to install Druedu Notifications.

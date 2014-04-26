@@ -1,0 +1,7 @@
+name = Druedu redirection
+description =  Decide which page to redirect after a node( depends by the node type ) delete.
+core = 7.x
+package = Druedu
+version = "7.x-1.x-dev"
+configure = admin/config/druedu/druedu_redirect_configure
+dependencies[] = druedu_core

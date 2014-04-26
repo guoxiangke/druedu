@@ -1,0 +1,25 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the team notifications module.
+ */
+
+/**
+ * Implements hook_install()
+ */
+function druedu_notifications_team_install() {
+  db_query("UPDATE {system} SET weight = -25 WHERE name = 'druedu_notifications_team'");
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function druedu_notifications_team_uninstall() {
+  // Some global variables
+  variable_del('druedu_notifications_team_per_type');
+  variable_del('druedu_notifications_team_max_options');
+  variable_del('druedu_notifications_team_options');
+  foreach (array_keys(node_type_get_types()) as $type) {
+    variable_del('druedu_notifications_team_type_' . $type);
+  }
+}

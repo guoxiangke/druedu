@@ -1,0 +1,6 @@
+/* Debug CSS to help in development */
+
+div.dev-query {
+  text-align: center;
+  margin-top: 10px;
+}

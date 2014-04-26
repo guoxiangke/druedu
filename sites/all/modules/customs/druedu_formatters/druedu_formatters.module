@@ -1,0 +1,146 @@
+<?php
+/**
+ * Implements hook_field_formatter_info().
+ */
+function druedu_formatters_field_formatter_info() {
+  return array(
+    'counter_due_date' => array( //Machine name of the formatter
+      'label' => t('Counter'),
+      'description' => t('Add a counter date by homework module.'),
+      'field types' => array('date','datestamp','datetime'), //This will only be available to text fields
+      'settings' => NULL,
+    ),
+    'og_category_public_private' => array( //Machine name of the formatter
+      'label' => t('My Public / Private group'),
+      'field types' => array('list_boolean'), //This will only be available to text fields
+      'settings' => NULL,
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function druedu_formatters_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function druedu_formatters_field_formatter_settings_summary($field, $instance, $view_mode) {
+  switch ($instance['display'][$view_mode]['type']) {
+  case 'counter_due_date':
+      $summary = t('Display date with widget Counter due date.');
+      break;
+  }
+  return $summary;
+}
+
+/**
+ * Implements hook_field_formatter_view().
+ */
+function druedu_formatters_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+  $element = array();
+
+  switch ($display['type']) {
+  case 'counter_due_date':
+
+      foreach ($items as $delta => $item) {
+        $deadlineString = $item['value'];
+        $timezone = $item['timezone'];
+        $timezone_db = $item['timezone_db'];
+        if(is_numeric($deadlineString)) $deadlineString = date('Y-m-d H:i:s', $deadlineString);
+        $deadline = new DateTime($deadlineString, new DateTimeZone($timezone_db));
+        $now = new DateTime(null, new DateTimeZone($timezone));
+        $diff = $deadline->diff($now);
+        $tomorrow = new DateTime('tomorrow');
+
+        if($diff->y > 1){
+          $element[$delta]['#markup'] = t("@time years", array('@time' => $diff->y));
+          break;
+        }
+
+        if($diff->y == 1){
+          $element[$delta]['#markup'] = t("@time year", array('@time' => $diff->y));
+          break;
+        }
+
+        if($diff->m > 1){
+          $element[$delta]['#markup'] = t("@time months", array('@time' => $diff->m));
+          break;
+        }
+
+        if($diff->m == 1){
+          $element[$delta]['#markup'] = t("@time month", array('@time' => $diff->m));
+          break;
+        }
+
+        if($diff->d > 1){
+          $element[$delta]['#markup'] = t("@time days", array('@time' => $diff->d));
+          break;
+        }
+
+        $tomorrow = date("Ymd", strtotime("tomorrow"));
+        $deadlineDate = $deadline->format('Ymd');
+
+        if($deadlineDate ==  $tomorrow){
+          $element[$delta]['#markup'] = t("Due Tomorrow", array('@time' => $diff->h));
+          break;
+        }
+
+        if($diff->d == 1){
+          $element[$delta]['#markup'] = t("@time day", array('@time' => $diff->d));
+          break;
+        }
+
+        if($diff->h > 1){
+          $element[$delta]['#markup'] = t("@time hours", array('@time' => $diff->h));
+          break;
+        }
+
+        if($diff->h == 1){
+          $element[$delta]['#markup'] = t("@time hour", array('@time' => $diff->h));
+          break;
+        }
+
+        if($diff->m > 1){
+          $element[$delta]['#markup'] = t("@time minutes", array('@time' => $diff->m));
+          break;
+        }
+
+        if($diff->m == 1){
+          $element[$delta]['#markup'] = t("@time minute", array('@time' => $diff->m));
+          break;
+        }
+
+        if($diff->s > 1){
+          $element[$delta]['#markup'] = t("@time seconds", array('@time' => $diff->m));
+          break;
+        }
+
+        if($diff->s == 1){
+          $element[$delta]['#markup'] = t("@time second", array('@time' => $diff->m));
+          break;
+        }
+
+        $element[$delta]['#markup'] = "Now";
+        break;
+      }
+      if($deadline > $now) {
+        $element[$delta]['#markup'] = t('Due in') . ' ' . $element[$delta]['#markup'];
+      }
+      elseif($deadline < $now) {
+        $element[$delta]['#markup'] = t('Due date') . ' : ' . $element[$delta]['#markup'] . ' ' . t('ago');
+      }
+      break;
+
+    case 'og_category_public_private':
+      foreach ($items as $delta => $item) {
+        if($item['value']) $element[$delta]['#markup'] = t('My private groups');
+        else $element[$delta]['#markup'] = t('My public groups'); 
+      }
+      break;
+  }
+  return $element;
+}
+

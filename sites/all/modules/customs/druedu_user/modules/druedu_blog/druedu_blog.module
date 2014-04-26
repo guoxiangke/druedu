@@ -1,0 +1,119 @@
+<?php
+/**
+ * @file
+ * Code for the druedu blog feature.
+ */
+
+include_once 'druedu_blog.features.inc';
+
+/**
+ * Preprocess function for views template  (view level)
+ */
+function druedu_blog_preprocess_views_view_unformatted(&$vars) {
+  $view = $vars['view'];
+  if($view->name == 'blogs' && $view->display_id = 'page_blog_user') {
+    drupal_add_js(drupal_get_path('module', 'druedu_blog') .'/blog_page.js');
+    drupal_add_js(drupal_get_path('module', 'druedu_blog') .'/blog_page.js');
+  }
+}
+
+function druedu_blog_preprocess_views_view_field(&$vars) {
+	$views = $vars['view'];
+
+	if($views->name == 'blogs' && $views->current_display == 'page_blog_user') {
+		if(get_class($vars['field']) == 'views_handler_field_custom' && $vars['field']->options['ui_name'] == 'Comments') {
+			$node = node_load($vars['row']->nid);
+			$comments = comment_node_page_additions($node);
+			$comments['comments']['#prefix'] = "<div id=\"comment-wrapper-nid-{$node->nid}\">";
+			$comments['comments']['#suffix'] = '</div>';
+			$comments = drupal_render($comments);
+			$vars['field']->last_render = $vars['field']->last_render_text = $vars['field']->original_value = $vars['field']->options['alter']['text'] = $comments;
+		}
+	}
+}
+
+function druedu_blog_views_post_execute(&$view) {
+  /**
+   * If this is the current user: "You haven't any blog post yet."
+   * If this is another user's blog: "[user first name] [user last name] hasn't any blog post yet."
+   */
+  if($view->name =='blogs' && $view->current_display == 'page_blog_user'){ 
+    global $user;
+    if($user->uid == $view->build_info['substitutions']['!1']){
+      $view->build_info['substitutions']['%1'] = 'You haven\'t';
+    }else{
+      $view->build_info['substitutions']['%1'] .= ' hasn\'t';
+    }
+  }
+}
+
+/**
+* Implements HOOK_menu_local_tasks_alter().
+*/
+// Add action links on 'node/add/node-type', 'node/%' and 'node/%/edit' pages.
+function druedu_blog_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  $type = '';
+  $node_add_path = 'node/add';
+    foreach($router_item['page_arguments'] as $arg) {
+    if(isset($arg->type)) {
+      $type = str_replace('_','-',$arg->type);
+      $root_paths[] = 'node/add/'.$type;
+      $node_add_path .= '/'.$type;
+      break;
+    }
+    if(in_array($arg, array_keys(node_type_get_types()))) {
+      $type = str_replace('_','-',$arg);
+      $root_paths[] = 'node/add/'.$type;
+      $node_add_path .= '/'.$type;
+      break;
+    }
+  }
+  switch($type) {
+    case 'blog': 
+        global $user;
+        $item = menu_get_item('user/'.$user->uid);
+        if ($item['access']) {
+          $item['title'] = 'Back to profile';
+          if(empty($data['tabs'])) {
+            $data['tabs'][] = array('count' => 0, 'output' => array());
+          }
+            $added_item =array(
+              '#theme' => 'menu_local_task',
+              '#link' => $item,
+            ); 
+            if(!in_array($added_item, $data['tabs'][0]['output'])){
+              $data['tabs'][0]['output'][] = $added_item;
+              $data['tabs'][0]['count']++;
+            }
+        }
+        break;
+  }
+  if(!$type && arg(0) =='user') {
+    $node_add_path = 'node/add/blog';
+    $item = menu_get_item($node_add_path);
+	if ($item['access']) {
+	    $item['title'] = t('Add'). ' '. $item['title'];
+	    if(empty($data['tabs'])) {
+	      	$data['tabs'][] = array('count' => 0, 'output' => array());
+	    }
+	    $item['weight'] = 1;
+	    $added_item =array(
+	      	'#theme' => 'menu_local_task',
+	       	'#link' => $item,
+	    ); 
+	    if(!in_array($added_item, $data['tabs'][0]['output'])){
+	        $data['tabs'][0]['output'][] = $added_item;
+	        $data['tabs'][0]['count']++;
+	    }
+	}
+  }
+}
+
+
+
+	
+
+
+
+
+

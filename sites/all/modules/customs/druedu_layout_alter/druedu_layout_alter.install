@@ -1,0 +1,27 @@
+<?php
+/**
+ * Implements hook_install().
+ * add alias to node/add/%type
+ * @see node_menu()
+ */
+function druedu_layout_alter_install() {
+	node_type_cache_reset();
+  foreach (node_type_get_types() as $type) {
+    $type_url_str = str_replace('_', '-', $type->type);
+    $path = array('source'=>'node/add/' . $type_url_str,'alias' =>'add_' . $type_url_str);
+    path_save($path);
+  }
+}
+/**
+ * Implements hook_uninstall().
+ */
+function druedu_layout_alter_uninstall() {
+	node_type_cache_reset();
+  foreach (node_type_get_types() as $type) {
+    $type_url_str = str_replace('_', '-', $type->type);
+    $path = array('source'=>'node/add/' . $type_url_str,'alias' =>'add_' . $type_url_str);
+    path_delete($path);
+  }
+}
+
+?>

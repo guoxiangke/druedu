@@ -1,0 +1,5 @@
+name = FileVault CKEDITOR
+description = The module enhances ckeditor to support both video and audio
+dependencies[] = filevault
+package = Druedu
+core = 7.x

@@ -1,0 +1,86 @@
+<?php
+/**
+ * @file
+ * Simple drag'n'drop upload until the real solution is done.
+ */
+
+/**
+ * Implements hook_menu().
+ *
+ * Define menu items and page callbacks. This hook enables modules to register
+ * paths in order to define how URL requests are handled. Paths may be registered
+ * for URL handling only, or they can register a link to be placed in a menu
+ * (usually the Navigation menu). A path and its associated information is
+ * commonly called a "menu router item". This hook is rarely called (for example,
+ * when modules are enabled), and its results are cached in the database.
+ * hook_menu() implementations return an associative array whose keys define
+ * paths and whose values are an.
+ *
+ * @return
+ *   An array of menu items. Each menu item has a key corresponding to the Drupal
+ *   path being registered. The corresponding array value is an associative array
+ *   that may contain the following key-value pairs: "title": Required. The
+ *   untranslated title of the menu item. "title callback": Function to generate
+ *   the title; defaults to t(). If you require only the raw string to be output,
+ *   set this to FALSE. "title arguments": Arguments to send to t() or your
+ *   custom callback, with path component substitution as described above.
+ */
+function druedu_simple_upload_menu() {
+
+  $items['druedu_simple_upload'] = array(
+    'title' => 'Simple Upload',
+    'page callback' => '_druedu_simple_upload_insert_file',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+// Add JS to the edit form
+function druedu_simple_upload_form_node_form_alter(&$form, &$form_state, $form_id) {
+  // Add the modult path to a variable
+  $form['#attached']['js'][] = array('data' => 'var druedu_simple_upload_path= "'.$GLOBALS['base_url'].'/druedu_simple_upload";', 'type' => 'inline');
+  // Add script
+  $form['#attached']['js'][] = array('data' => drupal_get_path('module', 'druedu_simple_upload').'/js/upload.js','type' => 'file');
+
+}
+
+// Handle the incoming file
+function _druedu_simple_upload_insert_file(){
+
+  // The posted data, for reference
+  $file = $_POST['value'];
+  $name = $_POST['name'];
+
+  // Get the mime
+  $getMime = explode('.', $name);
+  $mime = end($getMime);
+
+  // Separate out the data
+  $data = explode(',', $file);
+
+  // Encode it correctly
+  $encodedData = str_replace(' ','+',$data[1]);
+  $decodedData = base64_decode($encodedData);
+
+  // Returns the new file object
+  $file = file_save_data( $decodedData, 'public://'.$name, FILE_EXISTS_RENAME);
+
+  // Debug
+  //print_r( $file );
+
+  // Create a URL for the user
+  $url = file_create_url('public://'.$name);
+
+  // TODO if image rezise to medium
+  if( strpos( $file->filemime, "image") ){
+    $url = image_style_url("medium", $file->uri);
+  }
+
+  // Return the info to the JS
+  echo $url."#%#uploaded successfully#%#".$mime."#%#".$name;
+
+  // Exit Drupal. We just want the above echo send to the browser
+  drupal_exit();
+}

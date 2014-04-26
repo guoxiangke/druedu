@@ -1,0 +1,125 @@
+<?php
+
+define('DRUEDU_UCA_REVISION', 'view revisions'); 
+define('DRUEDU_UCA_NODE', 'view node'); 
+
+/**
+ * Implements hook_og_permission().
+ */
+function druedu_user_control_access_og_permission() {
+  $return_perms = array();
+  $return_perms += druedu_user_control_access_list_permissions(DRUEDU_UCA_REVISION);
+  $return_perms += druedu_user_control_access_list_permissions(DRUEDU_UCA_NODE);
+
+  return $return_perms;
+}
+
+/**
+ * Helper function to generate standard node permission list for a given type.
+ *
+ * @param $type
+ *   The machine-readable name of the node type.
+ * @return array
+ *   An array of permission names and descriptions.
+ */
+function druedu_user_control_access_list_permissions($permission) {
+  // Build standard list of node permissions for this type.
+  $perms = array(
+    "$permission" => array(
+      'title' => t('%type_permission', array('%type_permission' => $permission)),
+    ),
+  );
+
+  return $perms;
+}
+
+/**
+* Implements HOOK_menu_local_tasks_alter().
+*/
+function druedu_user_control_access_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  //hide link revision if no access
+  $node = menu_get_object();  
+  if(node_is_page($node)) {
+    $perm = og_user_access('node', $node->nid, DRUEDU_UCA_REVISION);
+    if(!user_access('access revisions page') || (!is_null($perm) && !$perm)) {
+      foreach ($data['tabs'][0]['output'] as $key => $local_task) {
+        if($local_task['#link']['path'] == 'node/%/revisions') {
+          unset($data['tabs'][0]['output'][$key]);
+          break;
+        }
+      }
+    }
+  }
+}
+
+/*
+* Implements HOOK_block_view
+*/
+function druedu_user_control_access_block_view_alter(&$data, $block) {
+  //hide block revision if no access
+  if(module_exists('diff') && $block->module == 'diff' && $block->delta == 'inline'){
+    $node = menu_get_object();  
+    if(node_is_page($node)) {
+      $perm = og_user_access('node', $node->nid, DRUEDU_UCA_REVISION);
+      if(!is_null($perm) && !$perm) {
+        $data['content'] = NULL;
+      }
+    }
+  }
+}
+
+/*
+* Implements HOOK_block_view
+*/
+function druedu_user_control_access_node_access($node, $op, $account) {
+  if($op == 'view') {
+    //access denied if user not in grade
+    if($node->type == DRUEDU_CT_GRADE) {
+      $perm = og_user_access('node', $node->nid, DRUEDU_UCA_NODE);
+      if(!is_null($perm) && !$perm){
+        return NODE_ACCESS_DENY;
+      }
+    }
+    elseif(og_is_group_content_type('node', $node->type)) {
+      $perm = og_user_access('node', $node->nid, DRUEDU_UCA_NODE);
+      $perm_group_ref = og_user_access('node', $node->og_node[LANGUAGE_NONE][0]['target_id'], DRUEDU_UCA_NODE);
+      if((!is_null($perm_group_ref) && !$perm_group_ref)) {
+        return NODE_ACCESS_DENY;
+      }
+      if(!is_null($perm) && !$perm){
+        return NODE_ACCESS_DENY;
+      }
+    }
+  }
+  if($op == 'update'){
+    if($node->type == DRUEDU_CT_GRADE) {
+      $perm = og_user_access('node', $node->nid, 'update group');
+      if((!is_null($perm) && !$perm) && !user_access("update $node->type content")) {
+        return NODE_ACCESS_DENY;
+      }
+    }
+    elseif(og_is_group_content_type('node', $node->type)) {
+      $node_ref = $_SESSION['og_context'];
+      if(!empty($node_ref) && isset($node_ref['gid'])) {
+        $node_ref = $node_ref['gid'];
+        $perm_group_ref = og_user_access('node', $node_ref, 'update group');
+        if((!is_null($perm_group_ref) && !$perm_group_ref) && !user_access("update $node->type content")) {
+          return NODE_ACCESS_DENY;
+        }
+      }
+    }
+  }
+  if($op == 'create'){
+     if(og_is_group_content_type('node', $node)) {
+      $node_ref = $_SESSION['og_context'];
+      if(!empty($node_ref) && isset($node_ref['gid'])) {
+        $node_ref = $node_ref['gid'];
+        $perm_group_ref = og_user_access('node', $node_ref, "create $node content");
+        if((!is_null($perm_group_ref) && !$perm_group_ref) || !user_access("create $node content")) {
+          return NODE_ACCESS_DENY;
+        }
+      }
+    }
+  }
+  return NODE_ACCESS_IGNORE;
+}

@@ -1,0 +1,6 @@
+name = Druedu cancel
+description =  Defines a Cancel button on node forms & Decide which page to redirect click node edit/add form.
+core = 7.x
+package = Druedu
+version = "7.x-1.x-dev"
+dependencies[] = druedu_redirect

@@ -1,0 +1,279 @@
+<?php
+/**
+ * @file
+ * Bulletins pages
+ */
+
+/**
+ * Atering bulletins views at the very beginning of views processing, before
+ * anything is done.
+ *
+ * Adding output to the view can be accomplished by placing text on
+ * $view->attachment_before and $view->attachment_after.
+ * @param $view
+ *   The view object about to be processed.
+ * @param $display_id
+ *   The machine name of the active display.
+ * @param $args
+ *   An array of arguments passed into the view.
+ */
+function druedu_bulletins_views_pre_view(&$view, &$display_id, &$args) {
+}
+
+
+/**
+ * This hook is called right before the render process. The query has been
+ * executed, and the pre_render() phase has already happened for handlers, so
+ * all data should be available.
+ *
+ * Adding output to the view can be accomplished by placing text on
+ * $view->attachment_before and $view->attachment_after. Altering the content
+ * can be achieved by editing the items of $view->result.
+ *
+ * This hook can be utilized by themes.
+ * @param $view
+ *   The view object about to be processed.
+ */
+function druedu_bulletins_views_pre_render(&$view) {
+	
+	if ($view->name == 'bulletins') {
+		// Override the title depending on the arguments
+		if($view->current_display == 'bulletins_main_page') {
+			$month = date('Y-m');
+			$title = &$view->build_info['title'];
+			if(!empty($view->result)){
+				//If the argument is the curent month, display "Bulletins - Month Year".
+				//Otherwise, display "Archive - Month Year"
+				if(in_array(date('Y-m'), $view->args)) {
+					$title .= ' - '.date('F Y');
+				} else {
+					$arg = explode('-', reset($view->args));
+					if(is_numeric(reset($arg)) && is_numeric(end($arg))) {
+						$timestamp = mktime(0, 0, 0, end($arg), 1, reset($arg));
+						$title = t('Archive'). ' - '.date("F Y", $timestamp);;
+					}
+				}
+			}
+			else {
+				$title .= ' - '.t('Latest');
+			}
+		}
+	}
+}
+
+/** Implementation of hook_theme
+ *
+ */
+function druedu_bulletins_theme($existing, $type, $theme, $path) {
+
+	return array(
+		'bulletins_months' => array(
+			'template' => 'bulletins-months',
+			'arguments' => array('bulletins_months' => null),
+				'path' => drupal_get_path('module', 'druedu_bulletins')."/templates",
+		),
+		'bulletins_sidebar_year_menu' => array(
+			'template' => 'bulletins-sidebar-year-menu',
+			'arguments' => array('bulletins_sidebar_year_menu' => null),
+			'path' => drupal_get_path('module', 'druedu_bulletins')."/templates",
+		),
+	);
+}
+
+/**
+ * Blocks definition
+ *
+ */
+function druedu_bulletins_block_info() {
+	$blocks['bulletins_months'] = array(
+		'info' => t('Bulletins Months List'),
+		'cache' => DRUPAL_NO_CACHE, //to be confirmed
+	);
+
+	$blocks['bulletins_sidebar_title'] = array(
+		'info' => t('Bulletins Sidebar Title'),
+		'cache' => DRUPAL_NO_CACHE, //to be confirmed
+	);
+
+	return $blocks;
+}
+
+/** 
+ * Implementation of hook_block_view
+ */
+function druedu_bulletins_block_view($delta = '') {
+	$block = array();
+	switch ($delta) {
+		case 'bulletins_months':
+		$block['title'] = NULL;
+		$block['content'] = bulletins_months_generate();
+		break;
+		case 'bulletins_sidebar_title':
+			$block['title'] = NULL;
+			$block['content'] = bulletins_sidebar_year_menu_generate();
+			break;
+		}
+		return $block;
+}
+
+/** 
+ * Generate the bulletins months list
+ * @TODO rewrite query
+ */
+function bulletins_months_generate() {
+	global $base_url;
+	$links = array();
+	$raw_data = array();
+	$join = db_select('field_data_field_date');
+ 	$join->fields('field_data_field_date');
+  	$join->condition('entity_type', 'node');
+  	$join->condition('deleted', '0');
+	$query = db_select('node','node');
+	$query->join($join, 'field_data_field_date', 'node.nid = field_data_field_date.entity_id');
+	$query->addExpression("DATE_FORMAT(field_date_value, '%Y-%m %M')", 'field_date_value');
+	$query->condition('node.status', '1');
+	$query->condition('node.type', array('bulletins'), 'IN');
+	$query->where("DATE_FORMAT(ADDTIME(field_data_field_date.field_date_value, SEC_TO_TIME(28800)), '%Y') BETWEEN :year AND :year", array(':year' => date('Y')));
+	$query->groupBy('field_data_field_date.field_date_value');
+	$query->orderBy('field_data_field_date.field_date_value', 'ASC');
+	$query->distinct();
+	$result = $query->execute();
+				
+				foreach($result as $record) {
+					$date = $record->field_date_value;
+					$data = explode(' ',$date);
+					$name = end($data);
+					$arg = reset($data);
+					$links[] = l($name, 'bulletins/'.$arg);
+					$raw_data[] = array(
+						'title' => $name,
+						'destination' => $base_url.'/bulletins/'.$arg
+					);
+				}
+
+				$links = array(
+						'#theme' => 'item_list',
+						'#items' => $links,
+				);
+				
+				$output = array('raw_data' => $raw_data, 'links' => $links);
+
+				$content = theme('bulletins_months', array('bulletins_months' => $output));
+
+				return $content;
+
+	
+	
+	
+}
+/** 
+ * Generate the bulletins title sidebar
+ */
+function bulletins_sidebar_year_menu_generate() {
+	$views_page = views_get_page_view();
+	if(empty($views_page->result)){
+		$output = array('current' => t('Latest bulletins'), 'links' => array());
+	}
+	else {
+	//Use the current year by default
+		$year = date('Y');
+		
+		$base = t('Bulletins ');
+		$years = get_bulletins_past_years();
+		$years[] = $year;
+		
+		//Get the arguments from URL and extract the year if we have it.
+		if(arg(0) == 'bulletins' && arg(1)) {
+			$year = explode('-',arg(1));
+			$year = reset($year);
+		}
+		
+		$links_years = array();
+		
+		foreach($years as $item) {
+			$links_years[$item] = l($base.$year, 'bulletins/'.$item);
+		}
+		$arg1 = arg(1);
+		if(!is_numeric($arg1)) {
+			$output = array('current' => t('Latest bulletins'), 'links' => $links_years);
+		}
+		else {
+			$output = array('current' => $base.$year, 'links' => $links_years);
+		}
+	}
+		$content = theme('bulletins_sidebar_year_menu', array('bulletins_sidebar_year_menu' => $output));
+		
+		return $content;
+}
+
+/**
+ * Generates a list of past years that have bulletins
+ * Returns an array with the following format:
+ * array('2012','2013')
+ * @TODO
+ */
+function get_bulletins_past_years(){
+	return array();
+}
+
+function druedu_bulletins_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+	if($root_path == 'node/%/edit') {
+		$type = bulletin_get_node_type();
+		if($type == 'bulletins') {
+			foreach($data['tabs'][0]['output'] as $key => $tab) {
+				if($tab['#link']['path'] == 'node/%/view') {
+					unset($data['tabs'][0]['output'][$key]);
+				}
+			}
+		}
+	}
+}
+
+/** Get the current node type from arguments
+ *
+ */
+function bulletin_get_node_type() {
+	$type = FALSE;
+	//Get the current node type if we are viewing a node, or the node type to add if we are adding a node
+	if(arg(0) == 'node' && is_numeric(arg(1))) {
+		$type = &drupal_static(__FUNCTION__);
+		if(!isset($type)) {
+			$node = node_load(arg(1));
+			$type = $node->type;
+		}
+	} elseif(arg(0) == 'node' && arg(1) == 'add') {
+		$item = menu_get_item(implode('/',arg()));
+		foreach($item['page_arguments'] as $arg) {
+			if(in_array($arg, array_keys(node_type_get_types()))) {
+				$type = $arg;
+				break;
+			}
+		}
+	}
+
+	return $type;
+}
+
+function druedu_bulletins_form_bulletins_node_form_alter(&$form, &$form_state) {
+	$form['actions']['submit']['#submit'][] = 'redirect_bulletins';
+}
+
+
+function redirect_bulletins($form, &$form_state) {
+	$nid = $form_state['node']->nid;
+	$form_state['redirect'] = array('bulletins', array('query' => array('nid' => $nid)));
+}
+
+/**
+ * Preprocess function for views template  (fields level)
+ */
+function druedu_bulletins_preprocess_views_view_fields(&$vars) {
+  	$view = $vars['view'];
+  	if($view->name == 'bulletins' && $view->current_display != 'bulletins_highlight') {
+	  	global $base_url, $user;
+		$query = drupal_get_query_parameters();
+		$nid_init_accordion = (isset($query['nid']) && !empty($query['nid'])) ? $query['nid'] : '';
+		$class_init_accordion = (!empty($nid_init_accordion) && $nid_init_accordion == $vars['row']->nid) ? 'in' : '';
+	    $vars['row']->class_init_accordion = $class_init_accordion;
+    }
+}

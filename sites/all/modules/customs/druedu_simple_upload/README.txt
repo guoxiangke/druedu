@@ -1,0 +1,1 @@
+Simple drag'n'drop upload until the real solution is done

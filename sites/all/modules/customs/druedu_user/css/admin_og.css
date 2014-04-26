@@ -1,0 +1,114 @@
+#selection-container,#members-container{
+	width: 40%;
+	float:left;
+}
+#selection-container fieldset,#members-container fieldset{
+	
+}
+
+
+#edit-options {
+	width: 11%;
+	float:left;
+}
+#edit-actions{
+	float: left;
+	margin-top: 25px;
+}
+#edit-actions--2{
+	clear:both;
+}
+#grade-container,#subject-container,#class-container,#group-container{
+	float: left;
+	margin-right: 27px;
+}
+.form-item-posts-admins,.form-item-posts-members{
+	display:none;
+}
+
+#edit-potential-administrators,#edit-administrators{
+	width:100%;
+	min-height:100px;
+}
+#edit-potential-members,#edit-class-members {
+	width:100%;
+	min-height:200px;
+}
+#edit-options {
+	border-right:none;
+	border-left:none;
+
+}
+
+#edit-options .fieldset-wrapper{
+	padding: 175px 0;
+	margin-left: 30px;
+
+}
+#edit-options .fieldset-legend{
+	display: none;
+}
+#edit-user-search .fieldset-legend{
+	display: none;
+}
+#edit-user-search .form-item-search{
+	display:inline;
+}
+
+#edit-search{
+	width:200px;
+	margin-right: 27px;
+	height: 20px;
+}
+#edit-public-group, #edit-school-group, #edit-user-search{
+	border:none;
+}
+#edit-wrapper {
+	border: 2px solid #CCC;
+}
+
+#edit-user-search {
+	padding-top:0px;
+}
+#edit-selection,#edit-members{
+	min-height:409px;
+}
+
+#edit-add,#edit-remove {
+	background-image: url(../arrow.png);
+	height: 44px;
+	background-repeat: no-repeat;
+	border: 0;
+	text-indent: -9999px;
+	margin-right: 10px;
+	border-radius: 0px;
+}
+#edit-remove {
+/*-moz-transform:scale(-1，1);
+-webkit-transform:scale(-1，1);
+-o-transform:scale(-1，1);
+transform:scale(-1，1);
+filter:FlipH; */
+-webkit-transform: rotate(-180deg);
+-moz-transform: rotate(-180deg);
+-o-transform: rotate(-180deg);
+filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=6);
+}
+
+#op-notice{
+margin-bottom: 20px;
+text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+background-color: #FCF8E3;
+border: 1px solid #FBEED5;
+-webkit-border-radius: 4px;
+-moz-border-radius: 4px;
+border-radius: 4px;
+color: #C09853;
+}
+#op-notice{
+background-color: #D9EDF7;
+border-color: #BCE8F1;
+color: #3A87AD;
+background-image: url(../message-24-info.png);
+
+}

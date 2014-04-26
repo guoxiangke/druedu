@@ -1,0 +1,54 @@
+<?php
+function druedu_homework_install() {
+	//define pathauto pattern
+	variable_set('pathauto_node_assignment_pattern', 'homework/[node:field-assignments-set-referenced:title]/[node:title]');
+	variable_set('pathauto_node_assignment_set_pattern', 'homework/[node:title]');
+	//add taxonomy vocabularies
+	taxonomy_vocabulary_save((object) array('name' => 'Difficulties - Homework', 'machine_name' => 'difficulties_homework'));
+	taxonomy_vocabulary_save((object) array('name' => 'Status assignment - Homework', 'machine_name' => 'status_assignment'));
+	//add taxonomy terms
+	$vocabulary_difficulties_homework = taxonomy_vocabulary_machine_name_load('difficulties_homework');
+	$vid_difficulties_homework = $vocabulary_difficulties_homework->vid;
+	$vocabulary_status_assignment = taxonomy_vocabulary_machine_name_load('status_assignment');
+	$vid_status_assignment = $vocabulary_status_assignment->vid;
+	$terms = array(
+		0 => (object) array('vid' => $vid_difficulties_homework, 'name' => 'Easy', 'weight' => 0),
+		1 => (object) array('vid' => $vid_difficulties_homework, 'name' => 'Medium', 'weight' => 1),
+		2 => (object) array('vid' => $vid_difficulties_homework, 'name' => 'Hard', 'weight' => 2),
+		3 => (object) array('vid' => $vid_status_assignment, 'name' => 'Active', 'weight' => 0),
+		4 => (object) array('vid' => $vid_status_assignment, 'name' => 'Marked', 'weight' => 1),
+		5 => (object) array('vid' => $vid_status_assignment, 'name' => 'Submitted', 'weight' => 2),
+    );
+    foreach ($terms as $key => $term) {
+    	taxonomy_term_save($term);
+    }
+
+    //define admin settings variable 
+    $druedu_homework_config = array(
+    	'difficulty' => $vid_difficulties_homework, 
+    	'status_active_submission' => $terms[3]->tid, 
+    	'status_marked_submission' => $terms[4]->tid,  
+    	'status_submitted_submission' => $terms[5]->tid,  
+    );
+	variable_set('druedu_homework_config', $druedu_homework_config);
+
+    drupal_set_message(t('Please check if homework module has been configured automatically.'). ' ' . l(t('Homework configuration'), 'admin/config/druedu_homework/configure') . ' ' . t('And') . ' ' .l(t('Permissions'), 'admin/people/permissions#module-druedu_homework'));
+}
+
+function druedu_homework_uninstall() {
+	//delete admin settings variable 
+	variable_del('druedu_homework_config');
+	//delete pathauto pattern
+	variable_del('pathauto_node_assignment_pattern');
+	variable_del('pathauto_node_assignment_set_pattern');
+	//delete taxonomy vocabularies and terms
+	$vocabulary_difficulties_homework = taxonomy_vocabulary_machine_name_load('difficulties_homework');
+	$vid_difficulties_homework = $vocabulary_difficulties_homework->vid;
+	$vocabulary_status_assignment = taxonomy_vocabulary_machine_name_load('status_assignment');
+	$vid_status_assignment = $vocabulary_status_assignment->vid;
+	$vids = array($vid_difficulties_homework, $vid_status_assignment);
+	foreach ($vids as $vid) {
+    	taxonomy_vocabulary_delete($vid);
+    }
+
+}

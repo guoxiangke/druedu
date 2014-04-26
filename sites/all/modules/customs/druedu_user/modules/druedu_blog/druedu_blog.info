@@ -1,0 +1,23 @@
+name = druedu blog
+description = Handles blogs in Druedu
+core = 7.x
+package = Druedu
+version = 7.x-1.0
+project = druedu_blog
+dependencies[] = ctools
+dependencies[] = features
+dependencies[] = field_sql_storage
+dependencies[] = node
+dependencies[] = taxonomy
+dependencies[] = text
+dependencies[] = views
+dependencies[] = views_linkarea
+features[ctools][] = views:views_default:3.0
+features[features_api][] = api:1
+features[field][] = node-blog-body
+features[field][] = node-blog-field_keywords
+features[field][] = node-blog-field_summary
+features[node][] = blog
+features[taxonomy][] = tags
+features[views_view][] = blogs
+

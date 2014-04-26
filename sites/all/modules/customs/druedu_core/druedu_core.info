@@ -1,0 +1,5 @@
+name = Druedu Core
+description =  This module provide different function used on differents sub druedu module
+core = 7.x
+package = Druedu
+version = "7.x-1.x-dev"

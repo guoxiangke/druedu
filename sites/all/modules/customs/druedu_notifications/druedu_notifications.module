@@ -1,0 +1,323 @@
+<?php
+/**
+ * druedu_notifications
+ */
+
+/**
+ * Implementation of hook_permission().
+ */
+function druedu_notifications_permission() {
+  return array(
+    'Authorized to share a node' => array(
+      'title' => t('Authorized to share a node'),
+      'description' => t('Authorized an user to share a node to other users from the system.'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_views_api().
+ */
+function druedu_notifications_views_api() {
+  return array(
+    'api' => '3.0',
+    'path' => drupal_get_path('module', 'druedu_notifications'),
+  );
+}
+
+/**
+ * Implementation of hook_preprocess_views_view_field().
+ */
+function druedu_notifications_preprocess_views_view_field(&$vars) {
+  if(get_class($vars['field']) == 'views_handler_field_share_node') {
+    drupal_add_library('system', 'drupal.ajax');
+    drupal_add_js(drupal_get_path('module', 'druedu_notifications') .'/druedu_notification_share.js');
+  }
+}
+
+
+/**
+ * Implements hook_menu().
+ */
+function druedu_notifications_menu() {
+  $items = array();
+  $items['nojs/%node/%/unsubscribe/%'] = array(
+    'title' => 'Unsubscribe',
+    'type' => MENU_CALLBACK,
+    'page callback' => '_druedu_notifications_page_unsubscribe_subscription_4ajax',
+    'page arguments' => array(1,4,2),
+    'access callback' => 1,
+    // 'access callback' => 'notifications_access_unsubscribe',
+    // 'access arguments' => array(4),
+    'file' => 'druedu_notifications.pages.inc',
+  ); 
+  $items['ajax/%node/%/unsubscribe/%'] = array(
+    'delivery callback' => 'ajax_deliver',
+  ) + $items['nojs/%node/%/unsubscribe/%'];
+
+  // Subscribe links. For this items access will be checked later in the page
+  $items['nojs/%node/%/notifications/subscribe/%notifications_subscription_type'] = array(
+    'title' => 'Subscribe',
+    'type' => MENU_CALLBACK,
+    'page callback' => '_druedu_notifications_page_subscribe_4ajax',
+    'page arguments' => array(1,5,2),
+    'access callback' => 'notifications_access_subscribe',
+    'access arguments' => array(5),
+    'file' => 'druedu_notifications.pages.inc',
+  );
+  $items['ajax/%node/%/notifications/subscribe/%notifications_subscription_type'] = array(
+    'delivery callback' => 'ajax_deliver',
+  ) + $items['nojs/%node/%/notifications/subscribe/%notifications_subscription_type'];
+
+  // Unsubscribe links This page will need to work with anonymous users
+  // The parameter will be a list of sids, separated by commas
+  $items['nojs/%node/%/notifications/unsubscribe/%'] = array(
+    'title' => 'Unsubscribe',
+    'type' => MENU_CALLBACK,
+    'page callback' => '_druedu_notifications_page_unsubscribe_subscription_4ajax',
+    'page arguments' => array(1,5,2),
+    'access callback' => 1,
+    // 'access callback' => 'notifications_access_unsubscribe_4druedu',
+    // 'access arguments' => array(5),
+    'file' => 'druedu_notifications.pages.inc',
+  );
+  $items['ajax/%node/%/notifications/unsubscribe/%'] = array(
+    'delivery callback' => 'ajax_deliver',
+  ) + $items['nojs/%node/%/notifications/unsubscribe/%'];
+
+  $items['node/%node/share/%user/nojs'] = array(
+      'title' => 'Submission',
+      'page callback' => 'druedu_notification_get_share_form_callback',
+      'page arguments' => array(1, 3, 4),
+      'access callback' => TRUE,
+      'type' => MENU_CALLBACK,
+      'file' => 'druedu_notification.pages.inc',
+  );    
+  $items['node/%node/share/%user/ajax'] = array(
+    'delivery callback' => 'ajax_deliver',
+  ) + $items['node/%node/share/%user/nojs'];
+
+  $items['admin/config/druedu/druedu_notification_configure'] = array(
+    'title' => 'Druedu notifications - Configuration',
+    'description' => 'Configuration of the Druedu notifications.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('druedu_notification_config_form'),
+    'access arguments' => array('access administration pages'),
+    'file' => 'druedu_notifications.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_init().
+ * Need to include files for ajax calback form
+ */
+function druedu_notifications_init() {
+  if ($_GET['q'] == 'system/ajax' || strstr($_GET['q'], 'file/ajax/')) {
+    switch($_POST['form_id']) {
+      case 'druedu_notification_share_form':
+        module_load_include('inc', 'druedu_notifications', 'druedu_notification.form');
+        break;
+    }
+  }
+}
+
+/**
+ * Implements hook_menu_alter().
+ * @see 
+ */
+function druedu_notifications_menu_alter(&$items) {
+  //delete
+  $items['notifications/subscription/%notifications_subscription/delete']['access arguments'] = array(2, 'unsubscribe');
+}
+
+
+/**
+ * Implements hook_node_view().
+ * @see notifications_content_node_links 
+ * @see notifications_user_user_view
+ */
+function druedu_notifications_node_view($node, $view_mode, $langcode) {
+  global $user;
+    //dpm($node->content['links']['notifications_content']['#links']['notifications-1']);
+    // here no links of after  notification_content_node_views() processed data...
+    //  $weight = db_select('system', 's')
+    //             ->fields('s', array('weight'))
+    //             ->condition('name', 'notifications_content', '=')
+    //             ->execute()
+    //             ->fetchField();
+
+    // db_update('system')
+    //   ->fields(array('weight' => $weight +1))
+    //   ->condition('name', 'druedu_notifications', '=')
+    //   ->execute();
+    if(isset($node->content['links']['notifications_content']['#links']['notifications-1']) && preg_match('/Unsubscribe from:*:*./',$node->content['links']['notifications_content']['#links']['notifications-1']['title'])){
+      $node->content['links']['notifications_content']['#links']['notifications-1']['title'] = t('Unsubscribe: This post');
+    }
+  // drupal_add_library('system', 'drupal.ajax');
+  // drupal_add_library('system', 'jquery.form');
+
+  
+  $druedu_notifications_config = variable_get('druedu_notifications_config');
+  if($druedu_notifications_config['share_a_node'][$node->type] != '0') {
+    drupal_add_js(drupal_get_path('module', 'druedu_homework') .'/js/assignment-set-homework.js');
+    drupal_add_js(drupal_get_path('module', 'druedu_notifications') .'/druedu_notification_share.js');
+    drupal_add_js(drupal_get_path('module', 'druedu_layout_alter') . '/js/delete_popup.js');
+    $node->content['links']['druedu_links']['#links']['share'] = 
+      array(
+        'title' => '<i class="icon-share"></i>'.t('Share this').' '.str_replace('_', ' ', $node->type),
+        'html' => TRUE, 
+        'href' => 'node/'.$node->nid.'/share/'.$user->uid.'/nojs',
+        'attributes' => array(
+        'class' => array('use-ajax')
+      ),
+    );
+  }
+  //#488: Author & update information
+  //Display "Last edition by [username link] on [date]" for structure unit, subject, grade and group.
+  $edition_array = array('subject','grade','group','structure_unit');
+  if(in_array($node->type, $edition_array)) {
+    $edition_name = user_load($node->revision_uid)->name;
+    $node->content['links']['druedu_links']['#links']['edition'] = 
+      array(
+        'title' => t('Last edition by '.$edition_name.' on '.format_date($node->revision_timestamp, $type = 'short')),
+        'html' => TRUE, 
+        'href' => 'user/'.$node->revision_uid,
+        'attributes' => array(
+      ),
+    );  
+  }
+
+    if(isset($node->content['links']['notifications_content'])) {
+      $node->content['links']['#attributes']['class'][] = 'notifications-ajax';
+
+      $node->content['links']['#attributes']['id'] = 'notifications-links-'.$node->nid;   
+      drupal_add_js(drupal_get_path('module', 'druedu_notifications').'/druedu_notifications.js');
+      foreach ($node->content['links']['notifications_content']['#links'] as $key => $link) {
+        //Subscribe to: Posts of type .skip,but didnot work,bugs
+        if( preg_match('/Subscribe to: Posts of type.+/',$node->content['links']['notifications_content']['#links'][$key]['title']) ||preg_match('/Unsubscribe from:.+/',$node->content['links']['notifications_content']['#links'][$key]['title'])) {
+          if(!user_access('subscribe to content type')){
+            unset($node->content['links']['notifications_content']['#links'][$key]);
+          }
+          continue;
+        }
+        $node->content['links']['notifications_content']['#links'][$key]['href'] = 'nojs/'.$node->nid.'/'.$view_mode.'/'. $node->content['links']['notifications_content']['#links'][$key]['href'];
+      }
+    }
+
+  $account = user_load($node->uid);
+
+  if($user->uid == $node->uid){
+    return;
+  }
+
+  module_load_include('manage.inc', 'notifications');
+  $subscriptions  = notifications_manage_subscriptions_form(array('uid' => $user->uid));
+  //dpm($subscriptions['subscriptions']['#options'],'all my subscriptions ');
+  if(isset($subscriptions['subscriptions']['#options']))
+  foreach ($subscriptions['subscriptions']['#options'] as $sid => $item) {
+    if($item['name'] == 'All posts by '.$account->name && $item['status'] == 'active'){
+      $subscribed = TRUE;
+      $unsubscribe_id = $sid;
+      break;
+    }
+  }
+
+  $list = new Notifications_Subscription_List();
+  if (user_access('subscribe to author')) {
+    if (notifications_subscription_type('user_content', 'user_links') && notifications_subscription_type_enabled('user_content')) {
+      $list->add(notifications_subscription('user_content')
+        ->set_author($account)
+      );
+    }
+    // @todo Add here subscriptions to content type x author if enabled
+  }
+  $show_type = variable_get('notifications_content_type', array());
+  if ($list->count() && $show_type[$node->type]) {
+    $list->set_user($GLOBALS['user']);
+    //$node->content['links']['notifications_byuser'] = theme('item_list', array('items' => $list->get_links()));
+
+    foreach($list as $key => $subscription) {
+      $link = $subscription->element_link('subscription');
+      
+      $link['#href'] = 'nojs/' . $node->nid . '/' .$view_mode.'/'. $link['#href'];//'notifications/subscription/'.$sid.'/delete';//
+
+      $item = array(
+        'title' => $link['#title'],
+        'href' => $link['#href'],
+      ) + $link['#options'];
+
+      if($subscribed){
+        $link['#title'] = 'Unsubscribe All posts by: '.$account->name;
+        //http://dev.druedu.com/notifications/subscription/47/delete?destination=user/213/notifications/subscription
+        $link['#href'] = 'nojs/'.$node->nid.'/'.$view_mode.'/unsubscribe/'.$sid;//'notifications/subscription/'.$sid.'/delete';//
+
+        $item = array(
+          'title' => $link['#title'],
+          'href' => $link['#href'],
+        ) ;//+ $link['#options'];
+        $item['query']= drupal_get_destination();
+        // $item['destination'] = TRUE;
+        // $item['skip_confirmation'] = '1';
+        // $item['signed'] = '1';
+        // $item['html'] = TRUE;
+       // $item['base_path'] = 'notifications/unsubscribe/user_content';
+       // dpm($item ,'n0-directly');
+      }
+      $node->content['links']['notifications_content']['#links']['notifications-byuser-' . $key] = $item;
+    }
+  }
+}
+
+
+/**
+ * Menu access callback for unsubscribe links.
+ */
+function notifications_access_unsubscribe_4druedu($subscription = NULL, $account = NULL) {
+  if ($subscription && $GLOBALS['user']->uid && $subscription->uid == $GLOBALS['user']->uid
+    || $account && $GLOBALS['user']->uid == $account->uid) {
+    return user_access('maintain own subscriptions');
+  }
+  elseif (!$subscription && !$account) {
+    return user_access('maintain own subscriptions');
+  }
+}
+
+/**
+ * function notification_default_grades_select
+ * arguments :
+ * $node : node object
+ * $required : Bool , if FALSE add on the return array in key ['_none'] = "all grade"
+ * return array : key [default_grades] => default grades, key [default_users] => default user (only available if param $return_user is set to TRUE)
+ */
+function notification_default_grades_select($node, $required = FALSE, $return_user = FALSE, $op = 'view', $current_user = TRUE) {
+  global $user;
+  $users = user_load_multiple(null, array('status' => '1'));
+  $default_grades = array();
+  if(!$required) {
+    $default_grades['_none'] = t('All grades');
+  }
+  if(!$current_user && isset($users[$user->uid])) {
+    unset($users[$user->uid]);
+  }
+  if(!isset($node->nid)) {
+    $op = 'create';
+    $node = $node->type;
+  }
+  foreach ($users as $key => $default_user) {
+    if(node_access($op, $node, $default_user)) {
+      $default_users[$key] = $default_user->name;
+      $og_groups = og_get_groups_by_user($default_user, 'node');
+      $grades = node_load_multiple(NULL, array('type' => 'grade'));
+      foreach ($grades as $key => $grade) {
+
+        if($og_groups && in_array($key, $og_groups) && !isset($default_grades[$key])) {
+          $default_grades[$key] = $grade->title;
+        }
+      }
+    }
+  }
+  $return['default_grades'] = $default_grades;
+  if($return_user) $return['default_users'] = $default_users;
+  return $return;
+}

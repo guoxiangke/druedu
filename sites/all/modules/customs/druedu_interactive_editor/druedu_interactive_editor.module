@@ -1,0 +1,248 @@
+<?php
+/**
+ * @file
+ * Editor.
+ */
+
+
+
+function druedu_interactive_editor_form_node_form_alter(&$form, &$form_state, $form_id) {
+	/*@TODO
+	Add list of the content types that are affected by the interactive editor.
+	Should be setup in an admin form.
+	This would allow this function to know if the below code has to be executed.
+	Example (algorithm):
+
+	$types = variable_get('interactive_editor_types');
+	if(!in_array($type, strstr($form_id, '_node_form'))) {
+		return;
+	}
+
+	*/
+  // Add the HTML
+  //$form['#interactive_editor_toolbar'] = theme('interactive_editor_toolbar',  array( 'vars'=>$form )) ;
+	//$form['#interactive_editor_canvas'] = theme('interactive_editor_canvas',  array( 'vars'=>$form )) ;
+
+  // Get module path
+  $path = drupal_get_path('module', 'druedu_interactive_editor');
+
+  // Basic CSS
+  $form['#attached']['css'][] = array('data' => $path . '/css/druedu_interactive_editor.css','type' => 'file');
+
+  // The on/off switch
+  //$form['#attached']['js'][] = array('data' => $path . '/js/jquery.toggle.buttons.js','type' => 'file');
+  //$form['#attached']['css'][] = array('data' => $path . '/css/bootstrap-toggle-buttons.css','type' => 'file');
+  //$form['#attached']['js'][] = array('data' => $path . '/js/test.js','type' => 'file');
+
+  // Drag'n'drop libs
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/jquery.event.drag-2.2.js','type' => 'file');
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/jquery.event.drag.live-2.2.js','type' => 'file');
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/jquery.event.drop-2.2.js','type' => 'file');
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/jquery.event.drop.live-2.2.js','type' => 'file');
+
+
+
+  // Jslider
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/jquery.slider.min.js','type' => 'file');
+  //$form['#attached']['css'][] = array('data' => $path . '/js/libs/jslider.css','type' => 'file');
+
+  // Knob control
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/jquery.knob.js','type' => 'file');
+
+  // Drop Shadow Control
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/druedu_dropshadow.js','type' => 'file');
+
+  // Background Control
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/druedu_background.js','type' => 'file');
+
+  // Inner Shadow Control
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/druedu_innershadow.js','type' => 'file');
+
+  // Border Control
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/druedu_border.js','type' => 'file');
+
+  // Border RadiusControl
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/druedu_borderradius.js','type' => 'file');
+
+  // Border video and images
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/druedu_video.js','type' => 'file');
+
+  // Color picker
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/jquery.simplecolorpicker.js','type' => 'file');
+  //$form['#attached']['css'][] = array('data' => $path . '/js/libs/jquery.simplecolorpicker.css','type' => 'file');
+
+  // Text WYSIWYG
+  $form['#attached']['js'][] = array('data' => $path . '/js/libs/wysihtml5-0.3.0.js','type' => 'file');
+  $form['#attached']['js'][] = array('data' => $path . '/js/libs/bootstrap-wysihtml5-0.0.2.js','type' => 'file');
+  $form['#attached']['css'][] = array('data' => $path . '/js/libs/bootstrap-wysihtml5-0.0.2.css','type' => 'file');
+
+  // Text control
+  //$form['#attached']['js'][] = array('data' => $path . '/js/libs/druedu_text.js','type' => 'file');
+
+}
+
+function druedu_interactive_editor_block_info() {
+
+  $blocks['interactive_editor_switch'] = array(
+    'info' => t('Interactive Editor Switch'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  $blocks['interactive_editor_toolbar'] = array(
+    'info' => t('Interactive Editor Toolbar'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  $blocks['interactive_editor_canvas'] = array(
+    'info' => t('Interactive Editor Canvas'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  return $blocks;
+}
+
+/**
+ *  Implements hook_theme()
+ *
+ */
+function druedu_interactive_editor_theme() {
+  return array(
+    'interactive_editor_switch' => array(
+            'arguments' => null,
+            'template' => 'interactive-editor-switch',
+            'path' => drupal_get_path('module', 'druedu_interactive_editor')."/templates",
+    ),
+    'interactive_editor_toolbar' => array(
+            'arguments' => null,
+            'template' => 'interactive-editor-toolbar',
+            'path' => drupal_get_path('module', 'druedu_interactive_editor')."/templates",
+    ),
+    'interactive_editor_canvas' => array(
+            'arguments' => null,
+            'template' => 'interactive-editor-canvas',
+            'path' => drupal_get_path('module', 'druedu_interactive_editor')."/templates",
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_view($delta = '').
+ *
+ * Return a rendered or renderable view of a block.
+ *
+ * @param $delta
+ *   Which block to render. This is a unique identifier for the block within the
+ *   module, defined in.
+ *
+ * @return
+ *   An array containing the following elements: subject: The default localized
+ *   title of the block. If the block does not have a default title, this should
+ *   be set to NULL. content: The content of the block's body. This may be a
+ *   renderable array (preferable) or a string containing rendered HTML content.
+ *   For a detailed usage example, see block_example.module.
+ */
+function druedu_interactive_editor_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+     case 'interactive_editor_switch':
+       $block['subject'] = t('Interactive Editor Switch');
+       $block['content'] = theme('interactive_editor_switch', null );
+       break;
+     case 'interactive_editor_toolbar':
+       $block['subject'] = t('Interactive Editor Toolbar');
+       $block['content'] = theme('interactive_editor_toolbar', null );
+       break;
+     case 'interactive_editor_canvas':
+       $block['subject'] = t('Interactive Editor Canvas');
+       $block['content'] = theme('interactive_editor_canvas', null );
+       break;
+  }
+
+  return $block;
+}
+
+/**
+ * Implements MODULE_preprocess_HOOK().
+ */
+function druedu_interactive_editor_preprocess_block(&$variables) {
+
+  // Get module path
+  $path = drupal_get_path('module', 'druedu_interactive_editor');
+
+  switch ($variables['elements']['#block']->delta) {
+    case 'interactive_editor_switch':
+      drupal_add_js( $path.'/js/interactive_editor_switch/disable_wysiwyg.js' );
+      drupal_add_js( $path.'/js/interactive_editor_switch/interactive_editor_switch.js' );
+      break;
+
+    case 'interactive_editor_toolbar':
+
+      // CSS
+      drupal_add_css( $path . '/css/druedu_interactive_editor.css');
+
+      // Touch slider
+      drupal_add_js( $path.'/js/interactive_editor_toolbar/jquery.slider.min.js' );
+      drupal_add_css($path.'/js/interactive_editor_toolbar/jslider.css');
+
+      // Drop Shadow Handler
+      drupal_add_js( $path.'/js/interactive_editor_toolbar/druedu_dropshadow.js' );
+
+      // Background control
+      drupal_add_js( $path.'/js/interactive_editor_toolbar/druedu_background.js' );
+
+      // Inner Shadow control
+      drupal_add_js( $path.'/js/interactive_editor_toolbar/druedu_innershadow.js'  );
+
+      // Border control
+      drupal_add_js( $path.'/js/interactive_editor_toolbar/druedu_border.js'  );
+
+      // Border radius
+      drupal_add_js( $path.'/js/interactive_editor_toolbar/druedu_borderradius.js'  );
+
+      // Color picker
+      drupal_add_js( $path.'/js/interactive_editor_toolbar/jquery.simplecolorpicker.js' );
+      drupal_add_css($path.'/js/interactive_editor_toolbar/jquery.simplecolorpicker.css');
+
+      // Text
+      drupal_add_js( $path.'/js/interactive_editor_toolbar/druedu_text.js' );
+      break;
+
+    case 'interactive_editor_canvas':
+
+      // Interactive editor switch
+      drupal_add_js( $path.'/js/interactive_editor_switch/interactive_editor_switch.js' );
+
+      // Touch enabled drag libs
+      drupal_add_js( $path . '/js/libs/jquery.event.drag-2.2.js' );
+      drupal_add_js( $path . '/js/libs/jquery.event.drag.live-2.2.js' );
+
+      // Drag
+      drupal_add_js( $path . '/js/drag.js' );
+      break;
+
+    default:
+      break;
+  }
+
+
+
+
+}
+/*
+
+function druedu_interactive_editor_theme($existing, $type, $theme, $path) {
+  return array(
+    'interactive_editor_canvas' => array(
+      'render element' => 'form',
+      'template' => 'interactive-editor-canvas',
+      'path' => drupal_get_path('module', 'druedu_interactive_editor')."/templates",
+    ),
+    'interactive_editor_toolbar' => array(
+      'template' => 'interactive-editor-toolbar',
+      'arguments' => array('vars' => null),
+      'path' => drupal_get_path('module', 'druedu_interactive_editor')."/templates",
+    ),
+  );
+}
+*/

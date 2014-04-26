@@ -1,0 +1,14 @@
+name = Druedu layout alter
+description = Alter layout on druedu
+core = 7.x
+package = Druedu
+dependencies[] = publication_date
+dependencies[] = druedu_core
+dependencies[] = druedu_user
+dependencies[] = druedu_subject
+dependencies[] = pathauto
+version = "7.x-1.x-dev"
+
+
+datestamp = "1326973845"
+

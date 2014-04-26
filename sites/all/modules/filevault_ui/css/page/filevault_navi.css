@@ -1,0 +1,28 @@
+
+
+input#shareuser{
+  width: 100px;
+
+}
+
+.fw_filelist li{
+  display:inline-block;
+}
+
+.fw_filelist .fileobject {
+  width:128px;
+  height:128px;
+  margin-bottom:10px;
+  margin-right:10px;
+  position:relative;
+}
+
+.fileobject .json {
+  display: none;
+}
+
+
+.fileobject:focus
+{
+  background-color:yellow;
+}

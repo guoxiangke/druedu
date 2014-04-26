@@ -1,0 +1,75 @@
+<?php
+
+define('DRUEDU_CT_GRADE', 'grade'); 
+define('DRUEDU_CT_SUBJECT', 'subject'); 
+define('DRUEDU_CT_STRUCT_UNIT', 'structure_unit'); 
+
+
+
+/**
+ * Implementation of hook_menu().
+ */
+function druedu_core_menu() {
+  $items = array();
+  $items['admin/config/druedu'] = array(
+    'title' => 'Education Groupware',
+    'position' => 'left',
+    'weight' => -20,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('access administration pages'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
+  );
+  return $items;
+}
+
+
+/**
+ * Helper function to get groups by user and by content type
+ *
+ * @parm $account => user obejct : if NULL load curent user 
+ * @parm $type => string : content type machine name
+ *
+ * @return array associative nid => node title
+ */
+function _get_groups_by_user_and_node_type($account = NULL, $type = NULL) {
+  if(is_null($account)) {
+    global $user;
+    $account = user_load($user->uid);
+  }
+  $groups = og_get_groups_by_user($account, 'node');
+  if(!is_null($type)) {
+    $groups = node_load_multiple($groups, array('type' => $type));
+    _reorder_node_by_attribut($groups, 'created');
+  }
+  else {
+    $groups = node_load_multiple($groups);
+  }
+  $group_options = array();
+  foreach ($groups as $id => $group) {
+    $group_options[$id] = t($group->title);
+  }
+  return $group_options;
+
+}
+
+/**
+ * Helper function to order an array of nodes by a attribut
+ *
+ * @parm $orderby => string attribut
+ * @parm $nodes => array of node object
+ */
+function _reorder_node_by_attribut(&$nodes, $orderby) {
+  usort($nodes, build_sorter($orderby));
+  $temp_nodes = array();
+  foreach ($nodes as $key => $node) {
+    $temp_nodes[$node->nid] = $node;
+  }
+  $nodes = $temp_nodes;
+}
+
+function build_sorter($key) {
+    return function ($a, $b) use ($key) {
+        return strnatcmp($a->$key, $b->$key);
+    };
+}

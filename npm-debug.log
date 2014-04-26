@@ -1,0 +1,357 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'nodejs', '/usr/bin/npm', 'install', '-g', 'node-gyp' ]
+2 info using npm@1.1.59
+3 info using node@v0.8.8
+4 verbose read json /usr/lib/package.json
+5 verbose read json /usr/lib/package.json
+6 verbose cache add [ 'node-gyp', null ]
+7 silly cache add name=undefined spec="node-gyp" args=["node-gyp",null]
+8 verbose parsed url { pathname: 'node-gyp', path: 'node-gyp', href: 'node-gyp' }
+9 silly lockFile 54062583-node-gyp node-gyp
+10 verbose lock node-gyp /home/jens/.npm/54062583-node-gyp.lock
+11 silly lockFile 54062583-node-gyp node-gyp
+12 verbose addNamed [ 'node-gyp', '' ]
+13 verbose addNamed [ null, '' ]
+14 silly lockFile c0cd6589-node-gyp node-gyp@
+15 verbose lock node-gyp@ /home/jens/.npm/c0cd6589-node-gyp.lock
+16 silly addNameRange { name: 'node-gyp', range: '', hasData: false }
+17 verbose url raw node-gyp
+18 verbose url resolving [ 'https://registry.npmjs.org/', './node-gyp' ]
+19 verbose url resolved https://registry.npmjs.org/node-gyp
+20 info retry registry request attempt 1 at 11:21:28
+21 http GET https://registry.npmjs.org/node-gyp
+22 http 200 https://registry.npmjs.org/node-gyp
+23 silly registry.get cb [ 200,
+23 silly registry.get   { vary: 'Accept',
+23 silly registry.get     server: 'CouchDB/1.2.0 (Erlang OTP/R15B)',
+23 silly registry.get     etag: '"AK5WJ81NTEOVKKWXE3U559Q39"',
+23 silly registry.get     date: 'Sat, 01 Sep 2012 18:21:34 GMT',
+23 silly registry.get     'content-type': 'application/json',
+23 silly registry.get     'content-length': '146003' } ]
+24 silly addNameRange number 2 { name: 'node-gyp', range: '', hasData: true }
+25 silly addNameRange versions [ 'node-gyp',
+25 silly addNameRange   [ '0.0.1',
+25 silly addNameRange     '0.0.2',
+25 silly addNameRange     '0.0.3',
+25 silly addNameRange     '0.0.4',
+25 silly addNameRange     '0.0.5',
+25 silly addNameRange     '0.0.6',
+25 silly addNameRange     '0.1.0',
+25 silly addNameRange     '0.1.1',
+25 silly addNameRange     '0.1.2',
+25 silly addNameRange     '0.1.3',
+25 silly addNameRange     '0.1.4',
+25 silly addNameRange     '0.2.0',
+25 silly addNameRange     '0.2.1',
+25 silly addNameRange     '0.2.2',
+25 silly addNameRange     '0.3.0',
+25 silly addNameRange     '0.3.1',
+25 silly addNameRange     '0.3.2',
+25 silly addNameRange     '0.3.4',
+25 silly addNameRange     '0.3.5',
+25 silly addNameRange     '0.3.6',
+25 silly addNameRange     '0.3.7',
+25 silly addNameRange     '0.3.8',
+25 silly addNameRange     '0.3.9',
+25 silly addNameRange     '0.3.10',
+25 silly addNameRange     '0.3.11',
+25 silly addNameRange     '0.4.0',
+25 silly addNameRange     '0.4.1',
+25 silly addNameRange     '0.4.2',
+25 silly addNameRange     '0.4.3',
+25 silly addNameRange     '0.4.4',
+25 silly addNameRange     '0.4.5',
+25 silly addNameRange     '0.5.0',
+25 silly addNameRange     '0.5.1',
+25 silly addNameRange     '0.5.2',
+25 silly addNameRange     '0.5.3',
+25 silly addNameRange     '0.5.4',
+25 silly addNameRange     '0.5.5',
+25 silly addNameRange     '0.5.6',
+25 silly addNameRange     '0.5.7',
+25 silly addNameRange     '0.5.8',
+25 silly addNameRange     '0.6.0',
+25 silly addNameRange     '0.6.1',
+25 silly addNameRange     '0.6.2',
+25 silly addNameRange     '0.6.3',
+25 silly addNameRange     '0.6.4',
+25 silly addNameRange     '0.6.5',
+25 silly addNameRange     '0.6.6',
+25 silly addNameRange     '0.6.7',
+25 silly addNameRange     '0.6.8',
+25 silly addNameRange     '0.6.9' ] ]
+26 verbose addNamed [ 'node-gyp', '0.6.9' ]
+27 verbose addNamed [ '0.6.9', '0.6.9' ]
+28 silly lockFile 62cdcc41-node-gyp-0-6-9 node-gyp@0.6.9
+29 verbose lock node-gyp@0.6.9 /home/jens/.npm/62cdcc41-node-gyp-0-6-9.lock
+30 silly lockFile 88158673--org-node-gyp-node-gyp-0-6-9-tgz https://registry.npmjs.org/node-gyp/-/node-gyp-0.6.9.tgz
+31 verbose lock https://registry.npmjs.org/node-gyp/-/node-gyp-0.6.9.tgz /home/jens/.npm/88158673--org-node-gyp-node-gyp-0-6-9-tgz.lock
+32 verbose addRemoteTarball [ 'https://registry.npmjs.org/node-gyp/-/node-gyp-0.6.9.tgz',
+32 verbose addRemoteTarball   '91a919d01192705d371db6c5ff1a0c42f466d408' ]
+33 info retry fetch attempt 1 at 11:21:46
+34 verbose fetch to= /home/jens/tmp/npm-2852/1346523706194-0.022115716012194753/tmp.tgz
+35 http GET https://registry.npmjs.org/node-gyp/-/node-gyp-0.6.9.tgz
+36 http 200 https://registry.npmjs.org/node-gyp/-/node-gyp-0.6.9.tgz
+37 silly shasum updated bytes 40960
+38 silly shasum updated bytes 40960
+39 silly shasum updated bytes 40960
+40 silly shasum updated bytes 40960
+41 silly shasum updated bytes 40960
+42 silly shasum updated bytes 36450
+43 info shasum 91a919d01192705d371db6c5ff1a0c42f466d408
+43 info shasum /home/jens/tmp/npm-2852/1346523706194-0.022115716012194753/tmp.tgz
+44 verbose tar unpack /home/jens/tmp/npm-2852/1346523706194-0.022115716012194753/tmp.tgz
+45 silly lockFile 10ace546-194-0-022115716012194753-package /home/jens/tmp/npm-2852/1346523706194-0.022115716012194753/package
+46 verbose lock /home/jens/tmp/npm-2852/1346523706194-0.022115716012194753/package /home/jens/.npm/10ace546-194-0-022115716012194753-package.lock
+47 silly gunzTarPerm modes [ '777', '666' ]
+48 silly gunzTarPerm extractEntry package.json
+49 silly gunzTarPerm extractEntry .npmignore
+50 silly gunzTarPerm extractEntry README.md
+51 silly gunzTarPerm extractEntry LICENSE
+52 silly gunzTarPerm extractEntry addon.gypi
+53 silly gunzTarPerm extractEntry bin/node-gyp.js
+54 silly gunzTarPerm extractEntry legacy/common.gypi
+55 silly gunzTarPerm extractEntry legacy/tools/addon.gypi
+56 silly gunzTarPerm extractEntry legacy/tools/gyp/.npmignore
+57 silly gunzTarPerm extractEntry legacy/tools/gyp/LICENSE
+58 silly gunzTarPerm extractEntry legacy/tools/gyp/MANIFEST
+59 silly gunzTarPerm extractEntry legacy/tools/gyp/buildbot/buildbot_run.py
+60 silly gunzTarPerm extractEntry legacy/tools/gyp/DEPS
+61 silly gunzTarPerm extractEntry legacy/tools/gyp/gyp
+62 silly gunzTarPerm extractEntry legacy/tools/gyp/gyp.bat
+63 silly gunzTarPerm extractEntry legacy/tools/gyp/gyp_dummy.c
+64 silly gunzTarPerm extractEntry legacy/tools/gyp/gyptest.py
+65 silly gunzTarPerm extractEntry legacy/tools/gyp/AUTHORS
+66 silly gunzTarPerm extractEntry legacy/tools/gyp/codereview.settings
+67 silly gunzTarPerm extractEntry legacy/tools/gyp/OWNERS
+68 silly gunzTarPerm extractEntry legacy/tools/gyp/PRESUBMIT.py
+69 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSSettings_test.py
+70 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/__init__.py
+71 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/easy_xml.py
+72 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/easy_xml_test.py
+73 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/msvs.py
+74 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/__init__.py
+75 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/gypd.py
+76 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/gypsh.py
+77 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/make.py
+78 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/dump_dependency_json.py
+79 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/msvs_test.py
+80 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/ninja.py
+81 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/ninja_test.py
+82 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/scons.py
+83 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/xcode.py
+84 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/input.py
+85 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/mac_tool.py
+86 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSNew.py
+87 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSProject.py
+88 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSSettings.py
+89 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/common.py
+90 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSToolFile.py
+91 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSUserFile.py
+92 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSVersion.py
+93 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/ninja_syntax.py
+94 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/SCons.py
+95 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/sun_tool.py
+96 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/system_test.py
+97 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/xcode_emulation.py
+98 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/xcodeproj_file.py
+99 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/xml_fix.py
+100 silly gunzTarPerm extractEntry legacy/tools/gyp/pylintrc
+101 silly gunzTarPerm extractEntry legacy/tools/gyp/samples/samples
+102 silly gunzTarPerm extractEntry legacy/tools/gyp/samples/samples.bat
+103 silly gunzTarPerm extractEntry legacy/tools/gyp/setup.py
+104 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/README
+105 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/graphviz.py
+106 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/pretty_gyp.py
+107 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/pretty_sln.py
+108 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/pretty_vcproj.py
+109 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/Xcode/README
+110 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/Xcode/Specifications/gyp.pbfilespec
+111 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/Xcode/Specifications/gyp.xclangspec
+112 silly gunzTarPerm extractEntry legacy/tools/gyp_addon
+113 silly gunzTarPerm extractEntry lib/build.js
+114 silly gunzTarPerm extractEntry lib/clean.js
+115 silly gunzTarPerm extractEntry lib/configure.js
+116 silly gunzTarPerm extractEntry lib/install.js
+117 silly gunzTarPerm extractEntry lib/list.js
+118 silly gunzTarPerm extractEntry lib/node-gyp.js
+119 silly gunzTarPerm extractEntry lib/rebuild.js
+120 silly gunzTarPerm extractEntry lib/remove.js
+121 verbose read json /home/jens/tmp/npm-2852/1346523706194-0.022115716012194753/package/package.json
+122 silly lockFile 10ace546-194-0-022115716012194753-package /home/jens/tmp/npm-2852/1346523706194-0.022115716012194753/package
+123 verbose from cache /home/jens/tmp/npm-2852/1346523706194-0.022115716012194753/package/package.json
+124 verbose tar pack [ '/home/jens/.npm/node-gyp/0.6.9/package.tgz',
+124 verbose tar pack   '/home/jens/tmp/npm-2852/1346523706194-0.022115716012194753/package' ]
+125 verbose tarball /home/jens/.npm/node-gyp/0.6.9/package.tgz
+126 verbose folder /home/jens/tmp/npm-2852/1346523706194-0.022115716012194753/package
+127 silly lockFile 2dace026-s-npm-node-gyp-0-6-9-package-tgz /home/jens/.npm/node-gyp/0.6.9/package.tgz
+128 verbose lock /home/jens/.npm/node-gyp/0.6.9/package.tgz /home/jens/.npm/2dace026-s-npm-node-gyp-0-6-9-package-tgz.lock
+129 silly lockFile 2dace026-s-npm-node-gyp-0-6-9-package-tgz /home/jens/.npm/node-gyp/0.6.9/package.tgz
+130 silly lockFile 248ecc6e--jens-npm-node-gyp-0-6-9-package /home/jens/.npm/node-gyp/0.6.9/package
+131 verbose lock /home/jens/.npm/node-gyp/0.6.9/package /home/jens/.npm/248ecc6e--jens-npm-node-gyp-0-6-9-package.lock
+132 silly lockFile 248ecc6e--jens-npm-node-gyp-0-6-9-package /home/jens/.npm/node-gyp/0.6.9/package
+133 verbose tar unpack /home/jens/.npm/node-gyp/0.6.9/package.tgz
+134 silly lockFile 248ecc6e--jens-npm-node-gyp-0-6-9-package /home/jens/.npm/node-gyp/0.6.9/package
+135 verbose lock /home/jens/.npm/node-gyp/0.6.9/package /home/jens/.npm/248ecc6e--jens-npm-node-gyp-0-6-9-package.lock
+136 silly gunzTarPerm modes [ '777', '666' ]
+137 silly gunzTarPerm extractEntry package.json
+138 silly gunzTarPerm extractEntry .npmignore
+139 silly gunzTarPerm extractEntry README.md
+140 silly gunzTarPerm extractEntry LICENSE
+141 silly gunzTarPerm extractEntry lib/rebuild.js
+142 silly gunzTarPerm extractEntry lib/clean.js
+143 silly gunzTarPerm extractEntry lib/configure.js
+144 silly gunzTarPerm extractEntry lib/build.js
+145 silly gunzTarPerm extractEntry lib/list.js
+146 silly gunzTarPerm extractEntry lib/node-gyp.js
+147 silly gunzTarPerm extractEntry lib/remove.js
+148 silly gunzTarPerm extractEntry lib/install.js
+149 silly gunzTarPerm extractEntry addon.gypi
+150 silly gunzTarPerm extractEntry legacy/common.gypi
+151 silly gunzTarPerm extractEntry legacy/tools/addon.gypi
+152 silly gunzTarPerm extractEntry legacy/tools/gyp_addon
+153 silly gunzTarPerm extractEntry legacy/tools/gyp/.npmignore
+154 silly gunzTarPerm extractEntry legacy/tools/gyp/LICENSE
+155 silly gunzTarPerm extractEntry legacy/tools/gyp/buildbot/buildbot_run.py
+156 silly gunzTarPerm extractEntry legacy/tools/gyp/gyp.bat
+157 silly gunzTarPerm extractEntry legacy/tools/gyp/samples/samples
+158 silly gunzTarPerm extractEntry legacy/tools/gyp/samples/samples.bat
+159 silly gunzTarPerm extractEntry legacy/tools/gyp/OWNERS
+160 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSUserFile.py
+161 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/sun_tool.py
+162 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/xml_fix.py
+163 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/input.py
+164 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/easy_xml.py
+165 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSSettings.py
+166 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/__init__.py
+167 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSSettings_test.py
+168 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSToolFile.py
+169 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/xcode_emulation.py
+170 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/xcodeproj_file.py
+171 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/mac_tool.py
+172 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSNew.py
+173 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSVersion.py
+174 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/ninja_syntax.py
+175 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/SCons.py
+176 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/common.py
+177 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/easy_xml_test.py
+178 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/system_test.py
+179 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/gypd.py
+180 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/ninja_test.py
+181 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/xcode.py
+182 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/msvs_test.py
+183 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/ninja.py
+184 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/gypsh.py
+185 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/__init__.py
+186 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/scons.py
+187 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/msvs.py
+188 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/make.py
+189 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/generator/dump_dependency_json.py
+190 silly gunzTarPerm extractEntry legacy/tools/gyp/pylib/gyp/MSVSProject.py
+191 silly gunzTarPerm extractEntry legacy/tools/gyp/AUTHORS
+192 silly gunzTarPerm extractEntry legacy/tools/gyp/codereview.settings
+193 silly gunzTarPerm extractEntry legacy/tools/gyp/gyp_dummy.c
+194 silly gunzTarPerm extractEntry legacy/tools/gyp/PRESUBMIT.py
+195 silly gunzTarPerm extractEntry legacy/tools/gyp/pylintrc
+196 silly gunzTarPerm extractEntry legacy/tools/gyp/gyp
+197 silly gunzTarPerm extractEntry legacy/tools/gyp/DEPS
+198 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/README
+199 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/pretty_gyp.py
+200 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/graphviz.py
+201 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/pretty_vcproj.py
+202 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/pretty_sln.py
+203 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/Xcode/README
+204 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/Xcode/Specifications/gyp.xclangspec
+205 silly gunzTarPerm extractEntry legacy/tools/gyp/tools/Xcode/Specifications/gyp.pbfilespec
+206 silly gunzTarPerm extractEntry legacy/tools/gyp/setup.py
+207 silly gunzTarPerm extractEntry legacy/tools/gyp/MANIFEST
+208 silly gunzTarPerm extractEntry legacy/tools/gyp/gyptest.py
+209 silly gunzTarPerm extractEntry bin/node-gyp.js
+210 verbose read json /home/jens/.npm/node-gyp/0.6.9/package/package.json
+211 silly lockFile 248ecc6e--jens-npm-node-gyp-0-6-9-package /home/jens/.npm/node-gyp/0.6.9/package
+212 silly shasum updated bytes 40960
+213 silly shasum updated bytes 40960
+214 silly shasum updated bytes 40960
+215 silly shasum updated bytes 40960
+216 silly shasum updated bytes 40960
+217 silly shasum updated bytes 37206
+218 info shasum f7016f18fa24130b8aa881d75fe728a792235d86
+218 info shasum /home/jens/.npm/node-gyp/0.6.9/package.tgz
+219 verbose from cache /home/jens/.npm/node-gyp/0.6.9/package/package.json
+220 verbose chmod /home/jens/.npm/node-gyp/0.6.9/package.tgz 666
+221 verbose chown /home/jens/.npm/node-gyp/0.6.9/package.tgz [ 1000, 1000 ]
+222 silly lockFile 88158673--org-node-gyp-node-gyp-0-6-9-tgz https://registry.npmjs.org/node-gyp/-/node-gyp-0.6.9.tgz
+223 silly lockFile 62cdcc41-node-gyp-0-6-9 node-gyp@0.6.9
+224 silly lockFile c0cd6589-node-gyp node-gyp@
+225 silly resolved [ { name: 'node-gyp',
+225 silly resolved     description: 'Node.js native addon build tool',
+225 silly resolved     keywords: [ 'native', 'addon', 'module', 'c', 'c++', 'bindings', 'gyp' ],
+225 silly resolved     version: '0.6.9',
+225 silly resolved     installVersion: 9,
+225 silly resolved     author:
+225 silly resolved      { name: 'Nathan Rajlich',
+225 silly resolved        email: 'nathan@tootallnate.net',
+225 silly resolved        url: 'http://tootallnate.net' },
+225 silly resolved     repository:
+225 silly resolved      { type: 'git',
+225 silly resolved        url: 'git://github.com/TooTallNate/node-gyp.git' },
+225 silly resolved     preferGlobal: true,
+225 silly resolved     bin: { 'node-gyp': './bin/node-gyp.js' },
+225 silly resolved     main: './lib/node-gyp.js',
+225 silly resolved     dependencies:
+225 silly resolved      { glob: '3',
+225 silly resolved        'graceful-fs': '1',
+225 silly resolved        fstream: '~0.1.13',
+225 silly resolved        minimatch: '0.2',
+225 silly resolved        mkdirp: '0.3',
+225 silly resolved        nopt: '2',
+225 silly resolved        npmlog: '0',
+225 silly resolved        osenv: '0',
+225 silly resolved        request: '2.9',
+225 silly resolved        rimraf: '2',
+225 silly resolved        semver: '1',
+225 silly resolved        tar: '~0.1.12',
+225 silly resolved        which: '1' },
+225 silly resolved     engines: { node: '>= 0.6.0' },
+225 silly resolved     readme: 'node-gyp\n=========\n### Node.js native addon build tool\n\n`node-gyp` is a cross-platform command-line tool written in Node.js for compiling\nnative addon modules for Node.js, which takes away the pain of dealing with the\nvarious differences in build platforms. It is the replacement to the `node-waf`\nprogram which is removed for node `v0.8`. If you have a native addon for node that\nstill has a `wscript` file, then you should definitely add a `binding.gyp` file\nto support the latest versions of node.\n\nMultiple target versions of node are supported (i.e. `0.6`, `0.7`,..., `1.0`,\netc.), regardless of what version of node is actually installed on your system\n(`node-gyp` downloads the necessary development files for the target version).\n\n#### Features:\n\n * Easy to use, consistent interface\n * Same commands to build your module on every platform\n * Supports multiple target versions of Node\n\n\nInstallation\n------------\n\nYou can install with `npm`:\n\n``` bash\n$ npm install -g node-gyp\n```\n\nYou will also need to install:\n\n  * On Unix:\n    * `python`\n    * `make`\n    * A proper C/C++ compiler toolchain, like GCC\n  * On Windows:\n    * [Python][windows-python] ([`v2.7.3`][windows-python-v2.7.3] recommended, `v3.x.x` is not supported)\n    * Microsoft Visual C++ ([Express][msvc] version works well)\n      * For 64-bit builds of node and native modules you will _also_ need the [Windows 7 64-bit SDK][win7sdk]\n\nHow to Use\n----------\n\nTo compile your native addon, first go to its root directory:\n\n``` bash\n$ cd my_node_addon\n```\n\nThe next step is to generate the appropriate project build files for the current\nplatform. Use `configure` for that:\n\n``` bash\n$ node-gyp configure\n```\n\n__Note__: The `configure` step looks for the `binding.gyp` file in the current\ndirectory to processs. See below for instructions on creating the `binding.gyp` file.\n\nNow you will have either a `Makefile` (on Unix platforms) or a `vcxproj` file\n(on Windows) in the `build/` directory. Next invoke the `build` command:\n\n``` bash\n$ node-gyp build\n```\n\nNow you have your compiled `.node` bindings file! The compiled bindings end up\nin `build/Debug/` or `build/Release/`, depending on the build mode. At this point\nyou can require the `.node` file with Node and run your tests!\n\n__Note:__ To create a _Debug_ build of the bindings file, pass the `--debug` (or\n`-d`) switch when running the either `configure` or `build` command.\n\n\nThe "binding.gyp" file\n----------------------\n\nPreviously when node had `node-waf` you had to write a `wscript` file. The\nreplacement for that is the `binding.gyp` file, which describes the configuration\nto build your module in a JSON-like format. This file gets placed in the root of\nyour package, alongside the `package.json` file.\n\nA barebones `gyp` file appropriate for building a node addon looks like:\n\n``` json\n{\n  "targets": [\n    {\n      "target_name": "binding",\n      "sources": [ "src/binding.cc" ]\n    }\n  ]\n}\n```\n\nSome additional resources for writing `gyp` files:\n\n * ["Hello World" node addon example](https://github.com/joyent/node/tree/master/test/addons/hello-world)\n * [gyp user documentation](http://code.google.com/p/gyp/wiki/GypUserDocumentation)\n * [gyp input format reference](http://code.google.com/p/gyp/wiki/InputFormatReference)\n * [*"binding.gyp" files out in the wild* wiki page](https://github.com/TooTallNate/node-gyp/wiki/%22binding.gyp%22-files-out-in-the-wild)\n\n\nCommands\n--------\n\n`node-gyp` responds to the following commands:\n\n| **Command**   | **Description**\n|:--------------|:---------------------------------------------------------------\n| `build`       | Invokes `make`/`msbuild.exe` and builds the native addon\n| `clean`       | Removes any the `build` dir if it exists\n| `configure`   | Generates project build files for the current platform\n| `rebuild`     | Runs "clean", "configure" and "build" all in a row\n| `install`     | Installs node development header files for the given version\n| `list`        | Lists the currently installed node development file versions\n| `remove`      | Removes the node development header files for the given version\n\n\nLicense\n-------\n\n(The MIT License)\n\nCopyright (c) 2012 Nathan Rajlich &lt;nathan@tootallnate.net&gt;\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n\'Software\'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \'AS IS\', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n\n[windows-python]: http://www.python.org/getit/windows\n[windows-python-v2.7.3]: http://www.python.org/download/releases/2.7.3#download\n[msvc]: http://www.microsoft.com/visualstudio/en-us/products/2010-editions/visual-cpp-express\n[win7sdk]: http://www.microsoft.com/download/en/details.aspx?displayLang=en&id=8279\n',
+225 silly resolved     _id: 'node-gyp@0.6.9',
+225 silly resolved     dist: { shasum: 'f7016f18fa24130b8aa881d75fe728a792235d86' },
+225 silly resolved     _from: 'node-gyp' } ]
+226 info install node-gyp@0.6.9 into /usr/lib
+227 info installOne node-gyp@0.6.9
+228 verbose from cache /home/jens/.npm/node-gyp/0.6.9/package/package.json
+229 info /usr/lib/node_modules/node-gyp unbuild
+230 verbose read json /usr/lib/node_modules/node-gyp/package.json
+231 verbose tar unpack /home/jens/.npm/node-gyp/0.6.9/package.tgz
+232 silly lockFile 41dd5197-usr-lib-node-modules-node-gyp /usr/lib/node_modules/node-gyp
+233 verbose lock /usr/lib/node_modules/node-gyp /home/jens/.npm/41dd5197-usr-lib-node-modules-node-gyp.lock
+234 silly gunzTarPerm modes [ '777', '666' ]
+235 error Error: EACCES, mkdir '/usr/lib/node_modules'
+235 error  { [Error: EACCES, mkdir '/usr/lib/node_modules']
+235 error   errno: 3,
+235 error   code: 'EACCES',
+235 error   path: '/usr/lib/node_modules',
+235 error   fstream_type: 'Directory',
+235 error   fstream_path: '/usr/lib/node_modules/node-gyp',
+235 error   fstream_class: 'DirWriter',
+235 error   fstream_stack:
+235 error    [ '/usr/lib/nodejs/npm/node_modules/fstream/lib/writer.js:171:23',
+235 error      '/usr/lib/nodejs/npm/node_modules/mkdirp/index.js:37:53',
+235 error      'Object.oncomplete (fs.js:297:15)' ] }
+236 error Please try running this command again as root/Administrator.
+237 error System Linux 3.2.0-29-generic
+238 error command "nodejs" "/usr/bin/npm" "install" "-g" "node-gyp"
+239 error cwd /var/www
+240 error node -v v0.8.8
+241 error npm -v 1.1.59
+242 error path /usr/lib/node_modules
+243 error fstream_path /usr/lib/node_modules/node-gyp
+244 error fstream_type Directory
+245 error fstream_class DirWriter
+246 error code EACCES
+247 error errno 3
+248 error stack Error: EACCES, mkdir '/usr/lib/node_modules'
+249 error fstream_stack /usr/lib/nodejs/npm/node_modules/fstream/lib/writer.js:171:23
+249 error fstream_stack /usr/lib/nodejs/npm/node_modules/mkdirp/index.js:37:53
+249 error fstream_stack Object.oncomplete (fs.js:297:15)
+250 verbose exit [ 3, true ]

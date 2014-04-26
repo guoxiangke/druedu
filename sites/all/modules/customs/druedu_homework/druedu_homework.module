@@ -1,0 +1,1025 @@
+<?php
+/**
+ * @file
+ * core of druedu homework module.
+ *
+ * written by Michael Tourneur
+ */
+
+include_once 'druedu_homework.features.inc';
+/**
+ * Implementation of hook_permission().
+ */
+function druedu_homework_permission() {
+  return array(
+    'administer assignment' => array(
+      'title' => t('Administer the specific options on an assignment'),
+      'description' => t('Allows a user to configure the options of an assignment.'),
+    ),
+    'access homework dashboard' => array(
+      'title' => t('Allow users to visit dashboard\'s homework page.'),
+      'description' => t('by Default select student, teacher and admin.'),
+    ),
+    'access admin dashboard' => array(
+      'title' => t('View all homework.'),
+      'description' => t('Please select admin role only.'),
+    ),
+    'access student dashboard' => array(
+      'title' => t('Allow student to have a dashboard of homework.'),
+      'description' => t('Please select student role only.'),
+    ),
+    'access teacher dashboard' => array(
+      'title' => t('Allow teacher to have a dashboard of student\'s homeworks.'),
+      'description' => t('Please select teacher role only.'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_permission().
+ */
+function druedu_homework_node_access($node, $op, $account) {
+  $type = is_string($node) ? $node : $node->type;
+  if($type == 'assignment' && $op == 'view') {
+    $node_ref = node_load($node->field_assignments_set_referenced[LANGUAGE_NONE][0]['target_id']);
+    if($node_ref->uid == $account->uid || $node->uid == $account->uid || user_access('administer nodes')) {
+      return NODE_ACCESS_ALLOW;
+    }
+    return NODE_ACCESS_DENY;
+  }
+  return NODE_ACCESS_IGNORE;
+}
+/**
+ * Implements hook_init().
+ * Need to include files for ajax calback form
+ */
+function druedu_homework_init() {
+  if ($_GET['q'] == 'system/ajax' || strstr($_GET['q'], 'file/ajax/')) {
+    switch($_POST['form_id']) {
+      case 'druedu_homework_submission_form':
+        module_load_include('inc', 'druedu_homework', 'includes/druedu_homework.pages');
+        module_load_include('inc', 'druedu_homework', 'includes/druedu_homework.form');
+        break;
+      case 'druedu_homework_timeline_comment_form':
+        module_load_include('inc', 'druedu_homework', 'includes/druedu_homework.form');
+        break;
+      case 'druedu_homework_update_last_submission_form':
+        module_load_include('inc', 'druedu_homework', 'includes/druedu_homework.pages');
+        module_load_include('inc', 'druedu_homework', 'includes/druedu_homework.form');
+        break;
+      case 'druedu_homework_status_close_assignment_set_form':
+        module_load_include('inc', 'druedu_homework', 'includes/druedu_homework.form');
+        break;
+      case 'druedu_homework_status_marked_assignment_form':
+        module_load_include('inc', 'druedu_homework', 'includes/druedu_homework.form');
+        break;
+      case 'druedu_homework_status_locked_assignment_form':
+        module_load_include('inc', 'druedu_homework', 'includes/druedu_homework.form');
+        break;
+        
+    }
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function druedu_homework_menu() {
+  $items['admin/config/druedu/druedu_homework_configure'] = array(
+       'title' => 'Druedu Homework - Configuration',
+       'description' => 'Configuration of the Druedu Homework module.',
+       'page callback' => 'drupal_get_form',
+       'page arguments' => array('druedu_homework_config_form'),
+       'access arguments' => array('access administration pages'),
+       'file' => 'includes/druedu_homework.admin.inc',
+  );
+  
+  $items['homework'] = array(
+      'title' => 'Homework',
+      'description' => 'This is menu-item for homework - dashboard.',
+      'page callback' => 'druedu_homework_dashboard',
+      'access callback' => 'user_access',
+      'access arguments' => array('access homework dashboard'),
+      'type' => MENU_NORMAL_ITEM,
+      'menu_name' => 'main-menu',
+      'file' => 'includes/druedu_homework.pages.inc',
+  );
+
+  $items['node/%node/homework/submission/nojs'] = array(
+      'title' => 'Submission',
+      'page callback' => 'druedu_homework_last_submission',
+      'page arguments' => array(4, 1),
+      'access callback' => 'druedu_homework_node_access_ajax',
+      'access arguments' => array(1, 'view'),
+      'weight' => 0,
+      'type' => MENU_CALLBACK,
+      'file' => 'includes/druedu_homework.pages.inc',
+  );    
+  $items['node/%node/homework/submission/ajax'] = array(
+    'delivery callback' => 'ajax_deliver',
+  ) + $items['node/%node/homework/submission/nojs'];
+
+  return $items;
+}
+
+/*
+* Implements HOOK_node_access
+*/
+function druedu_homework_node_access_ajax($node, $op = 'view') {
+  global $user;
+  if(is_int($node)) {
+    $node = node_load($node);
+  }
+  //Give access to assignment only to teacher create assignment set referenced
+  if($node->type == 'assignment' && $op == 'view') {
+    $node_ref = node_load($node->field_assignments_set_referenced[LANGUAGE_NONE][0]['target_id']);
+    if($node_ref->uid == $user->uid) {
+      return TRUE;
+    }
+    else {
+      return node_access($op, $node, $user);
+    }
+  }
+}
+
+/*
+* Implements HOOK_theme
+*/
+//Define to the template where is the default tpl file used by the node form
+function druedu_homework_theme($existing, $type, $theme, $path) {
+  $base = array(
+    'node_form__assignment_set' => array(
+      'render element' => 'form',
+      'template' => 'node-form--assignment-set',
+      'pattern' => 'node_form__',
+      'path' => drupal_get_path('module', 'druedu_homework')."/templates",
+    ),
+    'last_submission_student_block' => array(
+      'template' => 'last-submission-student-block',
+      'arguments' => array('last_submission_block' => array()),
+      'path' => drupal_get_path('module', 'druedu_homework')."/templates",
+    ),
+    'last_submission_teacher_block' => array(
+      'template' => 'last-submission-teacher-block',
+      'arguments' => array('last_submission_block' => array()),
+      'path' => drupal_get_path('module', 'druedu_homework')."/templates",
+    ),
+    /*
+    'node__assignment' => array(
+      'template' => 'node--assignment',
+      'pattern' => 'node__',
+      'path' => drupal_get_path('module', 'druedu_homework') .'/templates',
+    ),
+    'node__assignment_student' => array(
+      'template' => 'node--assignment-student',
+      'pattern' => 'node__',
+      'path' => drupal_get_path('module', 'druedu_homework') .'/templates',
+    ),
+    */
+  );
+  return $base;
+}
+
+/*
+* Implements HOOK_preprocess_node
+*/
+function druedu_homework_preprocess_node(&$variables) {
+  $function = __FUNCTION__ . '__' . $variables['type'];
+  if (function_exists($function)) {
+    $function($variables);
+  }
+}
+
+/*
+* Implements HOOK_preprocess_node to assignment set content type
+*/
+function druedu_homework_preprocess_node__assignment_set(&$variables) {
+  global $user;
+  module_load_include('inc', 'druedu_homework', 'includes/druedu_homework.pages');
+  module_load_include('inc', 'druedu_homework', 'includes/druedu_homework.form');
+  drupal_add_js(drupal_get_path('module', 'druedu_homework') .'/js/assignment-set-homework.js');
+  drupal_add_library('system', 'drupal.ajax');
+
+  if(user_access('administer assignment') || $variables['uid'] == $user->uid) {
+    global $base_url;
+    //get query of url
+    $param = drupal_get_query_parameters();
+    //PREPARE FILTERS VALUE TO SEARCH ON ASSIGNMENT
+    $page = (isset($param['page'])) ? $param['page'] : 1;
+    $name_search = (isset($param['name']) && !empty($param['name'])) ? $param['name'] : NULL;
+    $status_search = (isset($param['status']) && !empty($param['status'])) ? $param['status'] : NULL;
+    $difficulty_search = (isset($param['difficulty']) && !empty($param['difficulty'])) ? $param['difficulty'] : NULL;
+
+    $assignment_search = array();
+    //KEEP ONLY ASSIGNMENT CORRESPONDING OF FILTERS VALUE
+    foreach($variables['field_assignments_referencing'] as $key => $assignment) {
+      $student = user_load($assignment['entity']->uid);
+      $student_firstname = $student->field_firstname[LANGUAGE_NONE][0]['value'];
+      $student_lastname = $student->field_lastname[LANGUAGE_NONE][0]['value'];
+      $variables['field_assignments_referencing'][$key]['name'] = $student_firstname . ' ' . $student_lastname;
+      //CHECK FOR BODY FILTER
+      if(!is_null($name_search) 
+        && !stristr($variables['field_assignments_referencing'][$key]['name'], $name_search) 
+          && strcasecmp($variables['field_assignments_referencing'][$key]['name'], $name_search) != 0) {
+        unset($variables['field_assignments_referencing'][$key]);
+        continue;
+      }
+      //CHECK FOR STATUS FILTER
+      if(!is_null($status_search) 
+        && $status_search != $variables['field_assignments_referencing'][$key]['entity']->field_assignment_status[LANGUAGE_NONE][0]['tid']) {
+        unset($variables['field_assignments_referencing'][$key]);
+        continue;
+      }
+      //CHECK FOR DIFFICULTY FILTER
+      if(!is_null($difficulty_search) 
+        && $difficulty_search != $variables['field_assignments_referencing'][$key]['entity']->field_assignment_difficulty[LANGUAGE_NONE][0]['tid']) {
+        unset($variables['field_assignments_referencing'][$key]);
+        continue;
+      }
+      $assignment_search[] = $variables['field_assignments_referencing'][$key];
+    }
+
+    /* TEACHER */
+    $teacher = user_load($variables['uid']);
+    $variables['teacher_uid'] = $teacher->uid;
+    $teacher_name = $teacher->field_lastname[LANGUAGE_NONE][0]['value'];
+    $teacher_title = (isset($teacher->field_title) && !empty($teacher->field_title)) ? t($teacher->field_title[LANGUAGE_NONE][0]['value']) : NULL;
+    $variables['teacher_assignment_set'] = $teacher_title . ' ' . $teacher_name;
+
+    /* LIMIT DATE */
+    $variables['limit_date'] = date('D jS M Y', $variables['field_assignment_due_date'][0]['value']);
+
+    /* SUBJECT */
+    $variables['subject'] = $variables['field_assignment_subject'][0]['entity']->title;
+    $variables['subject_link'] = 'node/'.$variables['field_assignment_subject'][0]['target_id'];
+
+    // PREPARE DATA FOR PAGER
+    $total = sizeof($assignment_search); //number of assignment
+    $variables['assignment']['total'] = $total;
+    $limit = 15;
+    $init = (isset($param['page'])) ? $page * $limit : 0 ; //first item to display
+    $display = ($limit != 0) ? $limit : $total; //number of assignment we want to display by page
+    //COUNT ITEM ONTIME, LATE, and NONE
+    $nb_ontime = 0;
+    $nb_late = 0;
+    $nb_none = 0;
+    /* CREATE TABLE */
+    for($count = 0; $count < $display ; $count++) {
+      $key = $init + $count;
+      if(isset($assignment_search[$key])) {
+        $assignment = $assignment_search[$key];
+        $node = node_load($assignment['target_id']);
+        $last_submissions_info = _druedu_homework_last_submission($node);
+        $difficulty = (!empty($node->field_assignment_difficulty)) ? taxonomy_term_load($node->field_assignment_difficulty[LANGUAGE_NONE][0]['tid'])->name : t('none') ;
+        $difficulty = '<span class="difficulty '.strtolower(str_replace(' ', '_', $difficulty)).'">'. $difficulty . '</span>';
+        /* LAST SUBMISSION */
+        $submission = ($last_submissions_info['has_submission']) ? '<a class="use-ajax" href="'.$base_url.'/node/'.$assignment['target_id'].'/homework/submission/nojs"><i class="icon-eye-open"></i> - '.t('view').'</a>' : '<i class="icon-eye-close"></i> - '.t('view') ;
+        //$nb_submissions = sizeof($node->field_submission[LANGUAGE_NONE]);
+        $name = $assignment['name'];
+        $status_taxo = taxonomy_term_load($assignment['entity']->field_assignment_status[LANGUAGE_NONE][0]['tid']);
+        $status = t($status_taxo->name);
+        $view = l(t('View'), 'node/'.$assignment['target_id'], array('attributes' => array('class' => array('label', 'label-important'))));
+        $activity = _druedu_homework_get_last_activity($node->nid, $node->uid);
+        $activity = (!is_null($activity)) ? date('D j M Y', $activity->timestamp) : t('none');
+        $on_time = _druedu_homework_submission_on_time($node, $variables['field_assignment_due_date'][0]['value']);
+        if($on_time['has_submission']) {
+          $class = ($on_time['submission_on_time']) ? 'ontime' : 'late';
+          ($on_time['submission_on_time']) ? $nb_ontime += 1 : $nb_late += 1;
+        }
+        else{
+          $class = 'none';
+          $nb_none += 1;
+        }
+        $submission_time = '<span class="hide">'.$on_time['submission_on_time_value'].'</span>';
+        $variables['assignment']['rows'][] = array(
+          'data' => array(
+            array('data' => $submission_time),
+            array('data' => $name),
+            array('data' => $submission),
+            array('data' => $activity),
+            array('data' => $difficulty),
+            array('data' => $status),
+            array('data' => $view),
+          ),
+          'class' => array($class),
+        );
+      }
+      else{
+        break;
+      }
+    }
+
+    /* HEADER */
+    if($total != 0) {
+      $variables['assignment']['header'] = array(
+        array('data' => '', 'sort' => 'desc'),
+        array('data' => t('Name'), 'sort' => 'asc'),
+        array('data' => t('Last Submission')),
+        array('data' => t('Latest Activity')),
+        array('data' => t('Difficulty')),
+        array('data' => t('Status')),
+        array('data' => t('Operations')),
+      );
+      /* ADD A COLSPAN AND A IMAGE INFO */
+      if($nb_late != 0 || $nb_ontime != 0) {
+        global $base_url;
+        if($nb_late != 0) {
+          $rowspan_late['data'] = '<img src="'.$base_url.'/'.drupal_get_path('theme', 'druedu').'/img/label_late.png">';
+          $rowspan_late['rowspan'] = $nb_late;
+          $rowspan_late['class'] = 'rowspan_bottom';
+          $variables['assignment']['rows'][$nb_late-1]['class'][] = 'last_late';
+          array_unshift($variables['assignment']['rows'][0]['data'], $rowspan_late);
+        }
+        if($nb_ontime != 0) {
+          $rowspan_ontime['data'] = '<img src="'.$base_url.'/'.drupal_get_path('theme', 'druedu').'/img/label_ontime.png">';
+          $rowspan_ontime['rowspan'] = $nb_ontime;
+          $rowspan_ontime['class'] = 'rowspan_top';
+          array_unshift($variables['assignment']['rows'][$nb_late]['data'], $rowspan_ontime);
+        }
+        if($nb_none != 0) {
+          $rowspan_none['data'] = '';
+          $rowspan_none['rowspan'] = $nb_none;
+          array_unshift($variables['assignment']['rows'][$nb_late+$nb_ontime]['data'], $rowspan_none);
+
+        }
+        array_unshift($variables['assignment']['header'], array('data' => ''));
+      }
+    }
+    pager_default_initialize($total, $limit);
+    $variables['table'] = theme('table', $variables['assignment']);
+    $variables['pager'] = theme('pager');
+    $js = drupal_add_js();
+    unset($js['module']['misc/tableheader.js']);
+    $variables['status_close_assignment_set_form'] = drupal_get_form('druedu_homework_status_close_assignment_set_form');
+  }
+}
+
+/*
+* Implements HOOK_preprocess_node to assignment content type
+*/
+function druedu_homework_preprocess_node__assignment(&$variables) {
+    global $user;
+    module_load_include('inc', 'druedu_homework', 'includes/druedu_homework.pages');
+    module_load_include('inc', 'druedu_homework', 'includes/druedu_homework.form');
+    drupal_add_js(drupal_get_path('module', 'druedu_homework') .'/js/assignment-homework.js');
+    $homework_config = variable_get('druedu_homework_config');
+    $variables['last_submission_block'] = array();
+    $node = node_load($variables['nid']);
+    /* DUE DATE */
+    $due_date = field_get_items('node', $variables['field_assignments_set_referenced'][0]['entity'], 'field_assignment_due_date');
+    $due_date_display = field_info_instance('node', 'field_assignment_due_date', 'assignment_set');
+    $variables['due_date'] = field_view_value('node', $variables['field_assignments_set_referenced'][0]['entity'], 'field_assignment_due_date', $due_date[0], array('type' => $due_date_display['display']['default']['type']));
+    /* IN-CLASS */
+    $variables['in_class'] = ($variables['field_assignments_set_referenced'][0]['entity']->field_assignment_in_class[LANGUAGE_NONE][0]['value']) ? t('This assignment is being marked in-class.') : NULL;
+    /* STUDENT */
+    $student = user_load($variables['uid']);
+    $student_firstname = field_get_items('user', $student, 'field_firstname');
+    $variables['student_firstname'] = field_view_value('user', $student, 'field_firstname', $student_firstname[0]);
+    $student_lastname = field_get_items('user', $student, 'field_lastname');
+    $variables['student_lastname'] = field_view_value('user', $student, 'field_lastname', $student_lastname[0]);
+    /* TEACHER */
+    $teacher = user_load($variables['field_assignments_set_referenced'][0]['entity']->uid);
+    $variables['teacher_uid'] = $teacher->uid;
+    $teacher_name = $teacher->field_lastname[LANGUAGE_NONE][0]['value'];
+    $teacher_title = (isset($teacher->field_title) && !empty($teacher->field_title)) ? t($teacher->field_title[LANGUAGE_NONE][0]['value']) : NULL;
+    $variables['teacher_assignment_set'] = $teacher_title . ' ' . $teacher_name;
+    /* LIMIT DATE */
+    $limit_date = field_get_items('node', $variables['field_assignments_set_referenced'][0]['entity'], 'field_assignment_due_date');
+    $variables['limit_date'] = field_view_value('node', $variables['field_assignments_set_referenced'][0]['entity'], 'field_assignment_due_date', $limit_date[0]);
+    /* SUBJECT */
+    $subject = field_get_items('node', $variables['field_assignments_set_referenced'][0]['entity'], 'field_assignment_subject');
+    $variables['subject'] = field_view_value('node', $variables['field_assignments_set_referenced'][0]['entity'], 'field_assignment_subject', $subject[0]);
+    $variables['subject_link'] = 'node/' . $subject[0]['target_id'];
+    /* BODY ASSIGNMENT SET */
+    $body_assignment_set = field_get_items('node', $variables['field_assignments_set_referenced'][0]['entity'], 'body');
+    $variables['body_assignment_set'] = field_view_value('node', $variables['field_assignments_set_referenced'][0]['entity'], 'body', $body_assignment_set[0]);
+    /* ATTACHMENTS ASSIGNMENT SET */
+    //if(!empty($variables['field_assignments_set_referenced'][0]['entity']->field_attachments)) {
+     // $attachments_assignment_set = field_get_items('node', $variables['field_assignments_set_referenced'][0]['entity'], 'field_attachments');
+     // $attachments_assignment_set_display = field_info_instance('node', 'field_attachments', 'assignment_set');
+     // foreach ($attachments_assignment_set as $key => $attachment) {
+      //         $variables['attachments_assignment_set'][$key] = field_view_value('node', $variables['field_assignments_set_referenced'][0]['entity'], 'field_attachments', $attachment, array('type' => $attachments_assignment_set_display['display']['default']['type']));
+    //  }
+
+    //}
+
+    /* LAST SUBMISSION */
+    $last_submissions_info = _druedu_homework_last_submission($node);
+    $last_submissions_student_info = _druedu_homework_last_submission($node, $variables['uid']);
+    $last_submissions_teacher_info = _druedu_homework_last_submission($node, $variables['teacher_uid']);
+
+    /* PREPARE VALUE LAST SUBMISSION*/
+    $variables['last_submission_block'] = _druedu_homework_prepare_value_last_submission_block($last_submissions_info, $node->nid);
+    $variables['last_submission_student_block'] = _druedu_homework_prepare_value_last_submission_block($last_submissions_student_info, $node->nid);
+    $variables['last_submission_teacher_block'] = _druedu_homework_prepare_value_last_submission_block($last_submissions_teacher_info, $node->nid);
+    /* DIFFICULTY */
+    $variables['last_submission_student_block']['difficulty'] = (!empty($variables['field_assignment_difficulty'])) ? $variables['field_assignment_difficulty'][0]['taxonomy_term']->name : NULL ;
+    /* ON TIME */
+    $on_time = _druedu_homework_submission_on_time($node, $variables['field_assignments_set_referenced'][0]['entity']->field_assignment_due_date[LANGUAGE_NONE][0]['value']);
+    $variables['last_submission_student_block']['on_time'] = ($on_time['has_submission'] && $on_time['submission_on_time']) ? '<span class="green">'.t('ON TIME').'</span>' : '<span class="red">'.t('LATE').'</span>';
+    $variables['last_submission_student_block']['nid'] = $node->nid;
+
+    /* FORM COLLAPSIBLE */ 
+    if(($user->uid == $variables['uid'] && $last_submissions_student_info['has_submission']) || $user->uid == $variables['teacher_uid'] && $last_submissions_student_info['has_submission']) {
+      $variables['collapsed'] = 'collapse in';
+      $variables['hide_close'] = 'show';
+      if($variables['uid'] == $user->uid) { 
+        $variables['collapsed_default_message'] = t('Submit my homework');
+      }
+      else {
+        $variables['collapsed_default_message'] = t('Provide a correction');
+      }
+    }
+    else {
+      $variables['hide_close'] = 'hide';
+      $variables['collapsed'] = 'collapse';
+      $variables['collapsed_default_message'] = ($variables['uid'] == $user->uid) ? t('Submit my homework') :  t('Provide a correction');
+    }
+    if($variables['uid'] == $user->uid) {
+      $collapsed_message_close = t('Submit my homework');
+    }
+    else {
+      $collapsed_message_close = t('Provide a correction');
+    }
+    drupal_add_js(array('collapsed_message_open' => t('Hide'), 'collapsed_message_close' => $collapsed_message_close), 'setting');
+    /* SUBMISSION FORM */
+    if($node->uid != $user->uid || !$variables['field_locked'][0]['value']) {
+      $variables['submission_block_class'] = 'show';
+    }
+    else{
+      $variables['last_submission_block']['can_edit'] = FALSE;
+      $variables['submission_block_class'] = 'hide';
+    }
+    $variables['submission_form'] = drupal_get_form('druedu_homework_submission_form');
+    drupal_add_js(drupal_get_path('module', 'druedu_homework') .'/js/filevault-ui-homework.js');
+    /* STATUS FORM */
+    if(user_access('administer assignment')) {
+      $variables['status_locked_form'] = drupal_get_form('druedu_homework_status_locked_assignment_form');
+    }
+    if((!isset($variables['field_assignment_marked_date']) || empty($variables['field_assignment_marked_date']))
+      || $variables['field_assignment_status'][0]['tid'] != $homework_config['status_marked_submission']) {
+      if(user_access('administer assignment')) {
+        $variables['status_marked_form'] = drupal_get_form('druedu_homework_status_marked_assignment_form');
+      }
+    }
+    else{
+      $variables['marked_date'] = date('d M Y @ g:h A', $variables['field_assignment_marked_date'][0]['value']);
+    }
+}
+
+/**
+* Process variables for heartbeat-activity.tpl.php.
+*/
+function druedu_homework_preprocess_heartbeat_activity(&$variables) {
+   if($variables['is_front']){
+    // dpm($variables['theme_hook_suggestions']);
+    // unset( $variables['theme_hook_suggestions']);
+    $variables['theme_hook_suggestions'][] = 'heartbeat_activity__front' ;//. $variables['heartbeat_activity']->message_id;
+  }else{
+    $variables['theme_hook_suggestions'][] = 'heartbeat_activity__' . $variables['heartbeat_activity']->message_id;
+  }
+  //check if message_id is a submissinon and if this submission has been done after assignmenet has been marked
+  $node = &drupal_static(__FUNCTION__);
+  if(empty($node)) {
+    $node = node_load($variables['heartbeat_activity']->nid);
+  }
+  //if is marked add a class
+  if(isset($node->field_assignment_marked_date[LANGUAGE_NONE]) && $variables['heartbeat_activity']->timestamp > $node->field_assignment_marked_date[LANGUAGE_NONE]['0']['value']) {
+    $variables['classes_array'][] = 'marked';
+    if(isset($variables['content']['avatar'])) {
+      $variables['content']['avatar']['class'][] = 'marked';
+    }
+  }
+  //if is a student add a class
+  if($variables['heartbeat_activity']->uid == $node->uid) {
+    $variables['classes_array'][] = 'student';
+    if(isset($variables['content']['avatar'])) {
+      $variables['content']['avatar']['class'][] = 'student';
+    }
+  }
+  //is a teacher add a class
+  else {
+    $variables['classes_array'][] = 'teacher';
+    if(isset($variables['content']['avatar'])) {
+      $variables['content']['avatar']['class'][] = 'teacher';
+    }
+  }
+  //OVERRIDE IMAGE CACHE FOR AVATAR
+  if(isset($variables['content']['avatar'])) {
+    $user = user_load($variables['elements']['#heartbeat_activity']->uid);
+    $style = 'avatar_homework_submission';
+    $picture = (!empty($user->picture)) ? theme('image_style', array('style_name' => $style, 'path' => $user->picture->uri)) : theme('image_style', array('style_name' => $style, 'path' => variable_get('user_picture_default')));
+    $avatar = $picture;
+    $variables['content']['avatar']['#markup'] = $avatar;
+  }
+}
+
+/*
+* Implements HOOK_form_alter
+*/
+function druedu_homework_form_assignment_set_node_form_alter(&$form, &$form_state, $form_id) {
+  if(is_null($form['nid']['#value'])) {
+    $form['#attached']['js'][] = drupal_get_path('module', 'druedu_homework') .'/js/init_assignment_set_form.js';
+  }
+  $form['#attached']['js'][] = drupal_get_path('module', 'druedu_homework') .'/js/assignment-set-form.js';
+  $form['#attached']['js'][] = drupal_get_path('module', 'druedu_homework') . '/js/assignment-set-summary.js';
+  $grade_config = FALSE;
+  $form['#validate'][] = 'druedu_homework_form_assignment_set_validation';
+  if (!is_null($form['nid']['#value'])) {
+    $form['field_assignment_grade'][LANGUAGE_NONE]['#disabled'] = TRUE;
+    $form['field_assignment_grade'][LANGUAGE_NONE]['#description'] = t('This field can\'t be changed');
+    $grade_config = TRUE;
+  }
+  if(!$grade_config && !is_null($form_state['values']['field_assignment_grade'][LANGUAGE_NONE][0]['target_id'])) {
+    //$form['field_assignment_grade'][LANGUAGE_NONE]['#disabled'] = TRUE;
+    $form['field_assignment_grade'][LANGUAGE_NONE]['#default_value'] = $form_state['values']['field_assignment_grade'][LANGUAGE_NONE][0]['target_id'];
+  }
+  $form['field_assignment_grade'][LANGUAGE_NONE]['#prefix'] = '<div id="list_field_assignment_grade">';
+  $form['field_assignment_grade'][LANGUAGE_NONE]['#suffix'] = '</div>';
+  $form['field_assignment_grade'][LANGUAGE_NONE]['#options'] = grade_assignement_option(og_get_groups_by_user($form['uid']['value']));
+  $form['field_assignment_grade'][LANGUAGE_NONE]['#weight'] = 3;
+  $form['field_assignment_grade'][LANGUAGE_NONE]['#ajax'] = array(
+      'event' =>'change',
+      'callback' => 'subject_assignement_option_callback',
+      'wrapper' => 'list_field_assignment_subject',
+  );
+
+  $default_display = 'none';
+  $subject_config = FALSE;
+  if (!is_null($form['nid']['#value'])) {
+      $form['field_assignment_subject'][LANGUAGE_NONE]['#disabled'] = TRUE;
+      $default_display = 'block';
+      $form['field_assignment_subject'][LANGUAGE_NONE]['#description'] = t('This field can\'t be changed');
+      $subject_config = TRUE;
+  }
+  if(!$subject_config && !is_null($form_state['values']['field_assignment_subject'][LANGUAGE_NONE][0]['target_id'])) {
+    //$form['field_assignment_subject'][LANGUAGE_NONE]['#disabled'] = TRUE;
+    $form['field_assignment_subject'][LANGUAGE_NONE]['#default_value'] = $form_state['values']['field_assignment_subject'][LANGUAGE_NONE][0]['target_id'];
+    $default_display = 'block';
+  }
+
+  $subject_options = $form['field_assignment_subject'][LANGUAGE_NONE]['#options'];
+  if (!empty($form_state['values']['field_assignment_grade'][LANGUAGE_NONE][0]['target_id'])) {
+    $grade = $form_state['values']['field_assignment_grade'][LANGUAGE_NONE][0]['target_id'];
+    $subject_options = subject_assignement_option($grade, og_get_groups_by_user($form['uid']['value']));
+    $default_display = 'block';
+  }
+  $form['field_assignment_subject'][LANGUAGE_NONE]['#prefix'] = '<div style="display:'.$default_display.'" id="list_field_assignment_subject">';
+  $form['field_assignment_subject'][LANGUAGE_NONE]['#suffix'] = '</div>';
+  $form['field_assignment_subject'][LANGUAGE_NONE]['#options'] = $subject_options;
+  $form['field_assignment_subject'][LANGUAGE_NONE]['#weight'] = 4;
+  $form['field_assignment_subject'][LANGUAGE_NONE]['#ajax'] = array(
+      'event' =>'change',
+      'callback' => 'container_classes_students_assignement_option_callback',
+      'wrapper' => 'container_classes_students',
+  );
+
+  $form['container_classes_students'] = array(
+    '#type' => 'container',
+    '#weight' => 8,
+    '#prefix' => '<div style="display:'.$default_display.'" id="container_classes_students">',
+    '#suffix' => '</div>',
+  );
+
+  $form['container_classes_students']['vertical_tabs'] = array(
+    '#type' => 'vertical_tabs',
+  );
+
+  $default_display = 'none';
+  $structure_unit_config = FALSE;
+  if (!is_null($form['nid']['#value'])) {
+      $default_display = 'block';
+      $grade = $form['field_assignment_grade'][LANGUAGE_NONE]['#default_value'][0];
+      $subject = $form['field_assignment_subject'][LANGUAGE_NONE]['#default_value'][0];
+      $structure_unit_options = structure_unit_options_by_subject($grade, $subject);
+      $form['field_structure_unit'][LANGUAGE_NONE]['#options'] = $structure_unit_options;
+      $structure_unit_config = TRUE;
+  }
+  if(!$structure_unit_config && !is_null($form_state['values']['field_structure_unit'][LANGUAGE_NONE][0]['target_id'])) {
+    $form['field_structure_unit'][LANGUAGE_NONE]['#default_value'] = $form_state['values']['field_structure_unit'][LANGUAGE_NONE][0]['target_id'];
+    $default_display = 'block';
+  }
+
+  $structure_unit_options = $form['field_structure_unit'][LANGUAGE_NONE]['#options'];
+  if(!empty($form_state['values']['field_assignment_subject'][LANGUAGE_NONE][0]['target_id'])
+       && !empty($form_state['values']['field_assignment_grade'][LANGUAGE_NONE][0]['target_id'])) {
+      $grade = $form_state['values']['field_assignment_grade'][LANGUAGE_NONE][0]['target_id'];
+      $subject = $form_state['values']['field_assignment_subject'][LANGUAGE_NONE][0]['target_id'];
+      $structure_unit_options = structure_unit_options_by_subject($grade, $subject);
+      $form['field_structure_unit'][LANGUAGE_NONE]['#options'] = $structure_unit_options;
+      $default_display = 'block';
+  }
+
+  if(is_null($form['nid']['#value']) 
+      && (empty($form_state['values']['field_assignment_subject'][LANGUAGE_NONE][0]['target_id'])
+       || empty($form_state['values']['field_assignment_grade'][LANGUAGE_NONE][0]['target_id']))) {
+    $default_display = 'none';
+  }
+
+  $form['field_structure_unit'][LANGUAGE_NONE]['#prefix'] = '<div style="display:'.$default_display.'" id="list_field_structure_unit">';
+  $form['field_structure_unit'][LANGUAGE_NONE]['#suffix'] = '</div>';
+
+  $default_display = 'none';
+  if (!is_null($form['nid']['#value'])) {
+      $default_display = 'block';    
+  }
+  $class_options = $form['field_assignments_class'][LANGUAGE_NONE]['#options'];
+  if(!is_null($form['nid']['#value'])) {
+    if(!empty($form['field_assignment_subject'])
+       && !empty($form['field_assignment_grade'])) {
+      $grade = $form['field_assignment_grade'][LANGUAGE_NONE]['#default_value'][0];
+      $subject = $form['field_assignment_subject'][LANGUAGE_NONE]['#default_value'][0];
+      $class_options = class_assignement_option($grade, $subject, og_get_groups_by_user($form['uid']['value']));
+    }
+  }
+  else {
+    if(!empty($form_state['values']['field_assignment_subject'][LANGUAGE_NONE])
+       && !empty($form_state['values']['field_assignment_grade'][LANGUAGE_NONE])) {
+      $grade = $form_state['values']['field_assignment_grade'][LANGUAGE_NONE][0]['target_id'];
+      $subject = $form_state['values']['field_assignment_subject'][LANGUAGE_NONE][0]['target_id'];
+      $class_options = class_assignement_option($grade, $subject, og_get_groups_by_user($form['uid']['value']));
+    }
+  }
+  foreach ($class_options as $nid_class => $value) {
+    $form['container_classes_students'][$nid_class] = array(
+      '#type' => 'fieldset',
+      '#title' => $value,
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#group' => 'vertical_tabs',
+      '#attributes' => array('class' => array('container-classes-students-settings-form', $nid_class)),
+    );
+
+    $student_options = student_assignement_option($grade, $subject, $nid_class, $form['uid']['value']);
+
+    $form['container_classes_students'][$nid_class]['students'] = array(
+      '#type' => 'checkboxes',
+      '#options' => $student_options,
+      '#disabled' => FALSE ,
+      '#default_value' => (!is_null($form['nid']['#value'])) ? $form['field_assignment_students'][LANGUAGE_NONE]['#default_value'] : NULL ,
+    );
+    if(!is_null($form['nid']['#value'])) {
+      $form['container_classes_students'][$nid_class]['students']['#description'] = t('Impossible to remove students');
+    }
+  }
+
+   if(!empty($form_state['values']['field_assignment_subject'][LANGUAGE_NONE])
+       && !empty($form_state['values']['field_assignment_grade'][LANGUAGE_NONE]) 
+        && !empty($student_options)) {
+    $default_display = 'block';
+    $form['container_classes_students']['#prefix'] = '<label><input id="select_all_student" class="select_all" type="checkbox" value="all"> ' . t('Select all students') . '</label><div style="display:'.$default_display.'" id="container_classes_students">';
+  }
+
+  if(!empty($form_state['values']['field_assignment_subject'][LANGUAGE_NONE])
+       && !empty($form_state['values']['field_assignment_grade'][LANGUAGE_NONE])
+        && empty($student_options)) {
+    $form['container_classes_students']['#prefix'] = '<div class="no_student">'.t('Sorry, no students are available. Please contact an administrator.').'</div><div style="display:'.$default_display.'" id="container_classes_students">';
+  }
+
+  $form['container_classes_students']['hidden_classes'] = array(
+    '#type' => 'hidden',
+  );
+
+  $form['container_classes_students']['hidden_student'] = array(
+    '#type' => 'hidden',
+  );
+
+}
+
+function druedu_homework_form_assignment_set_validation(&$form, &$form_state) {
+  if(is_null($form['nid']['#value'])) {
+    $form['#attached']['js'][] = drupal_get_path('module', 'druedu_homework') .'/js/init_assignment_set_form.js';
+  }
+  $form['#attached']['js'][] = drupal_get_path('module', 'druedu_homework') .'/js/assignment-set-form.js';
+  $form['#attached']['js'][] = drupal_get_path('module', 'druedu_homework') . '/js/assignment-set-summary.js';
+  $classes = explode(';', $form_state['input']['hidden_classes']);
+  unset($classes[sizeof($classes)-1]);
+  $students = explode(';', $form_state['input']['hidden_student']);
+  unset($students[sizeof($students)-1]);
+  $count_students = 0;
+  if(!is_null($form['nid']['#value'])) {
+    $students = array_merge($form['field_assignment_students'][LANGUAGE_NONE]['#default_value'], $students);
+    $classes = array_merge($form['field_assignment_class'][LANGUAGE_NONE]['#default_value'], $classes);
+  }
+  foreach($students as $student) {
+    $form_state['values']['field_assignment_students'][LANGUAGE_NONE][$count_students]['target_id'] = $student;
+    $count_students += 1;
+  }
+  $count_classes = 0;
+  foreach($classes as $class) {
+    $form_state['values']['field_assignments_class'][LANGUAGE_NONE][$count_classes]['target_id'] = $class;
+    $count_classes += 1 ;
+  }
+}
+
+function subject_assignement_option_callback(&$form, &$form_state) {
+  $grade = $form_state['values']['field_assignment_grade'][LANGUAGE_NONE][0]['target_id'];
+  $form['field_assignment_subject'][LANGUAGE_NONE]['#prefix'] = '<div id="list_field_assignment_subject">';
+  $form['field_assignment_subject'][LANGUAGE_NONE]['#suffix'] = '</div>';
+  $form['field_assignment_subject'][LANGUAGE_NONE]['#options'] = subject_assignement_option($grade, $groups = og_get_groups_by_user($form['uid']['value']));
+  return array(
+    '#type' => 'ajax',
+    '#commands' => array(
+      ajax_command_replace("#list_field_assignment_subject", render($form['field_assignment_subject'][LANGUAGE_NONE])),
+      ajax_command_replace("#list_field_assignment_grade", render($form['field_assignment_grade'][LANGUAGE_NONE])),
+      ajax_command_replace("#list_field_structure_unit", render($form['field_structure_unit'][LANGUAGE_NONE])),
+    ),
+  );
+}
+
+function container_classes_students_assignement_option_callback(&$form, &$form_state) {
+  $commands = array();
+  $grade = $form_state['values']['field_assignment_grade'][LANGUAGE_NONE][0]['target_id'];
+  $subject = $form_state['values']['field_assignment_subject'][LANGUAGE_NONE][0]['target_id'];
+  $subject_options = subject_assignement_option($grade, og_get_groups_by_user($form['uid']['value']));
+  $class_options = class_assignement_option($grade, $subject, og_get_groups_by_user($form['uid']['value']));
+  $form['field_assignment_subject'][LANGUAGE_NONE]['#prefix'] = '<div id="list_field_assignment_subject">';
+  $form['field_assignment_subject'][LANGUAGE_NONE]['#options'] = $subject_options;
+  $form['container_classes_students']['#prefix'] = '<div id="container_classes_students">';
+  $form['field_structure_unit'][LANGUAGE_NONE]['#prefix'] = '<div id="list_field_structure_unit">';
+  $form['field_structure_unit'][LANGUAGE_NONE]['#suffix'] = '</div>';
+  $form['field_structure_unit'][LANGUAGE_NONE]['#options'] = structure_unit_options_by_subject($grade, $subject);
+  $commands[] = ajax_command_replace("#list_field_structure_unit", render($form['field_structure_unit'][LANGUAGE_NONE]));
+  $commands[] = ajax_command_replace("#list_field_assignment_subject", render($form['field_assignment_subject'][LANGUAGE_NONE]));
+  $commands[] = ajax_command_replace("#container_classes_students", render($form['container_classes_students']));
+    $student_options = array();
+  foreach ($class_options as $nid_class => $value) {
+    $student_options = student_assignement_option($grade, $subject, $nid_class, $form['uid']['value']);
+    if(!empty($student_options)) {
+      $commands[] = ajax_command_before('.container-classes-students-settings-form.'.$nid_class.' .fieldset-wrapper .form-checkboxes', '<label><input class="select_all" type="checkbox" value="all"> ' . t('Select all students of') . ' ' . $value . '</label>');
+    }
+  }
+  if(!empty($student_options)) {
+    $commands[] = ajax_command_before('#container_classes_students', '<div id="select_all_student_wrapper"><label><input id="select_all_student" class="select_all" type="checkbox" value="all"> ' . t('Select all students') . '</label></div>');
+  }
+  else {
+    $commands[] = ajax_command_before('#container_classes_students', '<div class="no_student">'.t('Sorry, no students are available. Please contact an administrator.').'</div>');
+    $commands[] = ajax_command_html('#container_classes_students', '');
+  }
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands, 
+  );
+}
+
+function grade_assignement_option($user) {
+  $nodes = druedu_user_get_nodes_by_group('grade');
+  $array_result = array('_none' => '- '.t('Select a value').' -');
+  foreach ($nodes as $key => $info) {
+    if(in_array($key, $user['node'])) {
+      $array_result[$key] = $info->title;
+    }
+  }
+  return $array_result;
+}
+
+function subject_assignement_option($grade, $user) {
+  $nodes = druedu_user_get_nodes_by_group($grade);
+  $array_result = array('_none' => '- '.t('Select a value').' -');
+  foreach ($nodes as $key => $info) {
+    if(in_array($key, $user['node'])) {
+      $array_result[$key] = $info->title;
+    }
+  }
+  return $array_result;
+}
+
+function class_assignement_option($grade, $subject, $user) {
+  $nodes = druedu_user_get_nodes_by_group($grade, $subject);
+  foreach ($nodes as $key => $info) {
+    if(in_array($key, $user['node'])) {
+      $array_result[$key] = $info->title;
+    }
+  }
+  return $array_result;
+}
+
+function student_assignement_option($grade, $subject, $classes, $uid_teacher) {
+  $students = array();
+  //foreach($classes as $key => $class_name) {
+    $users = druedu_user_get_users_by_group($grade, $subject, $classes);
+    foreach ($users as $uid => $name) {
+      $user = user_load($uid);
+      if($uid != $uid_teacher && user_access('access student dashboard',$user) && !user_access('administer content', $user)) {
+        $students[$uid] = $name;
+      }
+    }
+  //}
+  return $students;
+}
+
+function structure_unit_options_by_subject($grade, $subject) {
+  $structure_unit = druedu_user_get_nodes_by_group($grade, $subject, null, 'subject', 'structure_unit');
+  $array_result = array('_none' => '- '.t('None').' -');
+  foreach($structure_unit as $nid => $node) {
+    if(isset($node->field_status) && $node->field_status[LANGUAGE_NONE][0]['value']) {
+      $array_result[$key] = $node->title;
+    }
+  }
+  return $array_result;
+}
+
+/**
+ * Implements hook_node_presave().
+ */
+function druedu_homework_node_presave($node) {
+  if($node->type == 'assignment_set' && $node->is_new) {
+    /* TITLE OVERRIDE */
+    $title = node_load($node->field_assignment_subject[LANGUAGE_NONE][0]['target_id'])->title;
+    $node->title =  $title . ' : ' . $node->title;
+
+    /* ASSIGNMENTS DEFINITION FOR ASSIGNMENT SET */
+    $count = 0;
+    foreach ($node->field_assignment_students[LANGUAGE_NONE] as $user) {
+      //CREATE ASSIGNEMNT
+      $node_saved = _druedu_homework_create_an_assignment($user['target_id']);
+      //ADD ASSIGNMENT NID TO ASSIGNMENT SET
+      $node->field_assignments_referencing[LANGUAGE_NONE][$count]['target_id'] = $node_saved->nid;
+      $count += 1;
+    }
+  }
+  if($node->type == 'assignment_set' && !$node->is_new) {
+    //ADD STUDENTS
+    $students = array();
+    foreach ($node->field_assignment_students[LANGUAGE_NONE] as $key => $value) {
+        $students[] = $value['target_id']; 
+    }
+    if(!empty($node->original->field_assignment_students)) {
+      $previous_students = array();
+      foreach ($node->original->field_assignment_students[LANGUAGE_NONE] as $key => $value) {
+        $previous_students[] = $value['target_id']; 
+      }
+      $students = array_diff($students, $previous_students);
+    }
+    /* ADD ASSIGNMENTS DEFINITION FOR ASSIGNMENT SET */
+    $count = count($node->field_assignments_referencing[LANGUAGE_NONE]);
+    foreach ($students as $student) {
+      //CREATE ASSIGNEMNT
+      $node_saved = _druedu_homework_create_an_assignment($student);
+      //ADD ASSIGNMENT NID TO ASSIGNMENT SET
+      $node->field_assignments_referencing[LANGUAGE_NONE][$count]['target_id'] = $node_saved->nid;
+      $count += 1;
+    }
+  }
+}
+
+/*
+* Implements HOOK_node_insert
+*/
+function druedu_homework_node_insert($node) {
+  if ($node->type == 'assignment_set') {
+    /* UPDATE ASSIGNMENTS WITH NID OF ASSIGNMENT SET */
+    foreach($node->field_assignments_referencing[LANGUAGE_NONE] as $node_ref) {
+      $node_ref = node_load($node_ref['target_id']);
+      $user = user_load($node_ref->uid);
+      $node_ref->field_assignments_set_referenced[LANGUAGE_NONE][0]['target_id'] = $node->nid;
+      $node_ref->title = $user->field_firstname[LANGUAGE_NONE][0]['value'] . ' ' . $user->field_lastname[LANGUAGE_NONE][0]['value'] . ' - ' . $node->title;
+      node_save($node_ref);
+    }
+  }
+  //ADD A ENTRY ON HEARTBEAT AFTER CREATED AN ASSIGNMENT
+  if($node->type == 'assignment' && $node->is_new) {
+    $message = t('Homework assignment has been created');
+    _druedu_homework_heartbeat_homework_assignment_activity($node, $message);
+  }
+}
+
+/*
+* Implements HOOK_node_update
+*/
+function druedu_homework_node_update($node) {
+  if ($node->type == 'assignment_set') {
+    $assignment_referencing = array();
+    foreach ($node->field_assignments_referencing[LANGUAGE_NONE] as $key => $value) {
+        $assignment_referencing[] = $value['target_id']; 
+    }
+    if(!empty($node->original->field_assignments_referencing)) {
+      $previous_assignment_referencing = array();
+      foreach ($node->original->field_assignments_referencing[LANGUAGE_NONE] as $key => $value) {
+        $previous_assignment_referencing[] = $value['target_id']; 
+      }
+      $assignment_referencing = array_diff($assignment_referencing, $previous_assignment_referencing);
+    }
+    foreach ($assignment_referencing as $node_ref) {
+      $node_ref = node_load($node_ref);
+      $user = user_load($node_ref->uid);
+      $node_ref->field_assignments_set_referenced[LANGUAGE_NONE][0]['target_id'] = $node->nid;
+      $node_ref->title = $user->field_firstname[LANGUAGE_NONE][0]['value'] . ' ' . $user->field_lastname[LANGUAGE_NONE][0]['value'] . ' - ' . $node->title;
+      node_save($node_ref); 
+    }
+  }
+}
+
+/*
+* implementation helper function to create an assignment
+* @PARAM $author : int uid of the author
+* @RETURN object node
+*/
+function _druedu_homework_create_an_assignment($author) {
+  $node = new stdClass();
+  $node->type = 'assignment';
+  node_object_prepare($node);
+  $node->uid = $author;
+  $terms_assignment_status = _druedu_homework_get_term_by_vocabulary('status_assignment');
+  $key_active = array_search('Active', $terms_assignment_status);
+  $node->field_assignment_status[LANGUAGE_NONE][0]['tid'] = $key_active;
+  node_save($node);
+  return $node;
+}
+
+/*
+* Implements HOOK_node_delete
+*/
+function druedu_homework_node_delete($node) {
+  //delete all assignment referenced by the deleting assignment_set 
+  if($node->type == 'assignment_set' && !empty($node->field_assignments_referencing)) {
+    foreach ($node->field_assignments_referencing[LANGUAGE_NONE] as $key => $assignment) {
+      node_delete($assignment['target_id']);
+    }
+  }
+}
+
+/*
+* Implements HOOK_block_info
+*/
+function druedu_homework_block_info() {
+  // define an embedded comment form block for the timeline(heartbeat module) of homework 
+  $blocks['homework_timeline_comment_form'] = array(
+    'info' => t('Homework - Comment Form Timeline'),
+    'cache' => DRUPAL_NO_CACHE, //to be confirmed
+  );
+  $blocks['homework_add_assignment_set'] = array(
+    'info' => t('Homework - Add assignment set'),
+    'cache' => DRUPAL_NO_CACHE, //to be confirmed
+  );
+
+  return $blocks;
+
+}
+
+/*
+* Implements HOOK_block_view
+*/
+function druedu_homework_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    // define an embedded comment form block for the timeline(heartbeat module) of homework 
+    case 'homework_timeline_comment_form':
+      module_load_include('inc', 'druedu_homework', 'includes/druedu_homework.form');
+      $block['title'] = NULL;
+      $block['content'] = drupal_get_form('druedu_homework_timeline_comment_form');
+    break;
+    case 'homework_add_assignment_set':
+      $block['title'] = NULL;
+      $block['content'] = l(t('Add assignment set'), 'node/add/assignment-set');
+    break;
+  }
+  return $block;
+}
+
+/*
+* implementation helper function to add an entry of hearbeat message
+*/
+function _druedu_homework_heartbeat_homework_assignment_activity($node, $message) {
+  $message_id = 'heartbeat_first_homework_assignment_activity';
+  $variables = array(
+    'message' => $message,
+  );
+  heartbeat_api_log($message_id, $node->uid, 0, $node->nid, 0, $variables);
+}
+
+/*
+* implementation helper function to get all vocabularies
+*/
+function _druedu_homework_get_vocabularies() {
+  $query = db_select('taxonomy_vocabulary');
+  $query->fields('taxonomy_vocabulary');
+  $query->orderBy('weight', 'ASC');
+  $result = $query->execute();       
+  $array_result = array();
+  while($record = $result->fetchAssoc()) {
+    $array_result[$record['vid']] = $record['name'];
+  }
+  return $array_result;
+}
+
+/*
+* implementation helper function to get all terms of a vocabulary
+* @PARAM $machine_name : string : machine name of vocabulary
+* @RETURN array tid => term name
+*/
+function _druedu_homework_get_term_by_vocabulary($machine_name) {
+  $taxonomy_vocabulary = db_select('taxonomy_vocabulary','taxonomy_vocabulary');
+  $taxonomy_vocabulary->fields('taxonomy_vocabulary');
+  $taxonomy_vocabulary->condition('machine_name', $machine_name);
+  $query = db_select('taxonomy_term_data');
+  $query->fields('taxonomy_term_data');
+  $query->join($taxonomy_vocabulary, 'taxonomy_vocabulary', 'taxonomy_vocabulary.vid = taxonomy_term_data.vid');
+  $query->orderBy('weight', 'ASC');
+  $result = $query->execute();       
+  $array_result = array();
+  while($record = $result->fetchAssoc()) {
+    $array_result[$record['tid']] = $record['name'];
+  }
+  return $array_result;
+}

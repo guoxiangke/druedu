@@ -1,0 +1,6 @@
+name = Druedu Bulletins
+description = Bulletins pages in Druedu
+dependencies[] = views
+core = 7.x
+package = Druedu
+version = "7.x-1.x-dev"

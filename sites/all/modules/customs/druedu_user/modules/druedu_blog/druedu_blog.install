@@ -1,0 +1,5 @@
+<?php
+function druedu_blog_install() {
+	//define pathauto pattern
+	variable_set('pathauto_node_blog_pattern', 'blog/[author:uid]/[node:title]');
+}

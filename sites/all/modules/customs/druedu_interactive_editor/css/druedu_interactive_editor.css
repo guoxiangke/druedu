@@ -1,0 +1,423 @@
+
+
+#block-druedu-interactive-editor-interactive-editor-canvas #canvas_container{
+  display:none;
+}
+
+
+#block-druedu-interactive-editor-interactive-editor-toolbar #druedu_interactive_editor_toolbar {
+  display:none;
+  height:120px;
+}
+
+ #druedu_interactive_editor_toolbar{
+    height:210px;
+ }
+
+.widget{
+  display:block;
+  width: 200px;
+  border: 1px solid #ccc;
+  position: absolute;
+  cursor: move;
+  min-height: 20px;
+}
+
+#canvas {
+  border: 1px dashed #ccc;
+  width: 100%;
+  height: 600px;
+}
+
+
+#canvas .selected {
+
+border-color: rgba(81, 163, 81, 0.8);
+  outline: 0;
+  outline: thin dotted \9;
+  /* IE6-9 */
+
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(81, 163, 81, 0.6);
+     -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(81, 163, 81, 0.6);
+          box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(81, 163, 81, 0.6);
+
+}
+
+.selected .handle {
+  position: absolute;
+  height: 40px;
+  width: 40px;
+  z-index: 100;
+}
+.selected .NW, .selected .NN, .selected .NE {
+  top: -14px;
+  border-top: 2px dashed #ccc;
+
+  }
+.selected .NE, .selected .EE, .selected .SE {
+  right: -14px;
+  border-right: 2px dashed #ccc;
+
+  }
+.selected .SW, .selected .SS, .selected .SE {
+  bottom: -14px;
+  border-bottom: 2px dashed #ccc;
+
+  }
+.selected .NW, .selected .WW, .selected .SW {
+  left: -14px;
+  border-left: 2px dashed #ccc;
+
+  }
+
+
+.selected .rotate_NE, .selected .rotate_NW {
+  top:-60px;
+}
+
+.selected .rotate_SE, .selected .rotate_SW {
+  bottom:-60px;
+
+}
+
+.selected .rotate_SE, .selected .rotate_NE {
+  right: -60px;
+  background-image: url(../img/rotate.png);
+}
+
+.selected .rotate_SW, .selected .rotate_NW {
+  left: -60px;
+
+}
+
+
+.selected .SE, .selected .NW {
+  cursor: nw-resize;
+  }
+.selected .SW, .selected .NE {
+  cursor: ne-resize;
+    b
+
+}
+.selected .NN, .selected .SS {
+  cursor: n-resize;
+  left: 50%;
+  margin-left: -14px;
+
+  }
+.selected .EE, .selected .WW {
+  cursor: e-resize;
+  top: 50%;
+  margin-top: -14px;
+  }
+.selected .handle {
+  border-color: #ccc
+  ;
+  }
+
+.selected .delete{
+  left: -60px;
+  top:-60px;
+  border-radius: 50%;
+  background-image: url(../img/delete.png);
+  background-repeat:no-repeat;
+  background-position:center;
+}
+
+
+/**
+ *  Toolbar
+ *
+ */
+
+.druedu_slide_container {
+  height: 26px;
+  width: 250px;
+}
+
+.druedu_slide_container input {
+  height: 100%;
+  width: 100%;
+  float: right;
+
+}
+
+.druedu_slider_line {
+  color: #ffffff;
+  background-color: #0064cd;
+  background-repeat: repeat-x;
+  background-image: -khtml-gradient(linear, left top, left bottom, from(#049cdb), to(#0064cd));
+  background-image: -moz-linear-gradient(top, #049cdb, #0064cd);
+  background-image: -ms-linear-gradient(top, #049cdb, #0064cd);
+  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #049cdb), color-stop(100%, #0064cd));
+  background-image: -webkit-linear-gradient(top, #049cdb, #0064cd);
+  background-image: -o-linear-gradient(top, #049cdb, #0064cd);
+  background-image: linear-gradient(top, #049cdb, #0064cd);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#049cdb', endColorstr='#0064cd', GradientType=0);
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  border-color: #0064cd #0064cd #003f81;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  border-bottom-color: #bbb;
+  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.druedu_slider_handle {
+  background-color: #e6e6e6;
+  background-repeat: no-repeat;
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ffffff), color-stop(25%, #ffffff), to(#e6e6e6));
+  background-image: -webkit-linear-gradient(#ffffff, #ffffff 25%, #e6e6e6);
+  background-image: -moz-linear-gradient(top, #ffffff, #ffffff 25%, #e6e6e6);
+  background-image: -ms-linear-gradient(#ffffff, #ffffff 25%, #e6e6e6);
+  background-image: -o-linear-gradient(#ffffff, #ffffff 25%, #e6e6e6);
+  background-image: linear-gradient(#ffffff, #ffffff 25%, #e6e6e6);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffffff', endColorstr='#e6e6e6', GradientType=0);
+
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+
+  color: #333;
+  font-size: 13px;
+  line-height: normal;
+  border: 1px solid #ccc;
+  border-bottom-color: #bbb;
+  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 2px rgba(0, 0, 0, 0.05);
+  -webkit-transition: 0.1s linear background-image;
+  -moz-transition: 0.1s linear background-image;
+  -ms-transition: 0.1s linear background-image;
+  -o-transition: 0.1s linear background-image;
+  transition: 0.1s linear background-image;
+  overflow: visible;
+  border-radius: 8px;
+
+}
+
+
+#dropshadow_container {
+  border-bottom: solid #ccc 1px;
+  height: 150px;
+}
+
+#dropshadow_container section {
+  display: block;
+  width: 30%;
+  float: left;
+  height: 130px;
+}
+
+#dropshadow_container #color_picker {
+  overflow-y:auto;
+}
+
+
+#dropshadow_container #light_position {
+  overflow:hidden;
+}
+
+#innershadow_container {
+  border-bottom: solid #ccc 1px;
+  height: 150px;
+}
+
+#innershadow_container section {
+  display: block;
+  width: 25%;
+  float: left;
+  height: 150px;
+}
+
+#innershadow_container #color_picker {
+  overflow-y:auto;
+}
+
+
+#innershadow_container #light_position {
+  overflow:hidden;
+}
+
+
+#light_position {
+  text-align: center;
+  width: 155px;
+}
+
+body.page-node-add-wiki-page .page-header {
+  display: none;
+}
+
+body.page-node-add-wiki-page .breadcrumb {
+  display: none;
+}
+
+#light_position .checkbox {
+  text-align: left;
+}
+
+
+#text_container {
+  border-bottom: solid #ccc 1px;
+  height: 150px;
+}
+
+#add_toolbar {
+  border-bottom: solid #ccc 1px;
+  height: 209px;
+}
+
+
+.view-my-media .views-row {
+  display: block;
+  float: left;;
+}
+
+.view-my-media .views-row img{
+  height: 100px;
+}
+
+.view-my-media .views-row video{
+  height: 100px;
+}
+
+
+.druedu_slide_input input{
+  margin-top: -9px;
+  text-align: center;
+}
+
+#border_container {
+    border-bottom: solid #ccc 1px;
+    height: 150px;
+}
+
+#border_container section {
+  display: block;
+  width: 33%;
+  float: left;
+  height: 150px;
+}
+
+#border_style .broderstyle_container {
+  height: 150px;
+  width: 250px;
+}
+#border_style .broderstyle {
+  height: 50px;
+  width: 50px;
+  margin: 5px;
+  display: inline-block;
+}
+
+#borderradius_container section {
+  display: block;
+  width: 33%;
+  float: left;
+  height: 150px;
+}
+
+#borderradius_container {
+    border-bottom: solid #ccc 1px;
+    height: 150px;
+}
+#background_container {
+    border-bottom: solid #ccc 1px;
+    height: 150px;
+}
+
+#corners {
+  height: 100px !important;
+  width: 100px !important;
+}
+
+.cornersborder {
+    height: 50px;
+    width:  50px;
+    background-color: #06F;
+    display: inline-block;
+    float: left;
+}
+
+
+#corners .deselected {
+  background-color: #0CF;
+}
+
+
+
+.jcarousel video {
+  max-width: 100px;
+  max-height: 100px;
+}
+
+.jcarousel img {
+  max-width: 100px;
+  max-height: 100px;
+}
+
+
+#grid_checkbox {
+  float: right;
+}
+
+.layout-slider {
+  padding-left: 6px;
+  padding-right: 6px;
+
+  width: 200px;
+  margin-bottom: 30px;
+  margin-top: 10px;
+}
+
+#add_toolbar label {
+  margin-bottom: 10px;
+}
+
+
+
+.jcarousel-skin-default .jcarousel-clip-horizontal {
+    width: 800px;
+    overflow: hidden;
+}
+
+.jcarousel-skin-default .jcarousel-container-horizontal {
+    width: 800px;
+    height: 120px;
+    padding: 20px 40px;
+    margin: auto;
+}
+
+#savebtn {
+  float: right;
+  margin-top: -50px;
+  z-index: 100;
+  position: relative;
+}
+
+#canvas {
+  position: relative;
+}
+
+
+body.page-node-add-wiki-page #form-footer {
+  display: none;
+}
+
+
+.page-node-add .page-header {
+  display: none;
+}
+
+.druedu_interactive {
+  display: none;
+}
+
+.edit_content {
+  display: none;
+}
+
+.canvas_container {
+  display: none;
+}

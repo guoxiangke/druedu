@@ -1,0 +1,23 @@
+/* Modifications to the bootstrap default typography */
+/* Our own template content types */
+
+/* Hero Unit */
+.hero-unit h1 {
+	margin-bottom: 10px;
+}
+.no-bullet ul li {
+	list-style-type: none;
+}
+.center {
+    text-align:center;
+	width:auto;
+	margin:0 auto;
+}
+.center .dec,
+.image-center .dec {
+    padding-top:15px;
+}
+.image-center {
+    width:300px;
+    margin:0 auto;
+}

@@ -1,0 +1,1182 @@
+<?php
+
+/*
+* Include setting file
+*/
+module_load_include('inc', 'druedu_layout_alter', 'druedu_layout_alter.class');   
+
+
+/**
+ * Implementation of hook_permission().
+ */
+function druedu_layout_alter_permission() {
+  return array(
+    'access revisions page' => array(
+      'title' => t('Access revisions page'),
+      'description' => t('Allows a user to access to revisions page.'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function druedu_layout_alter_menu() {
+  $items = array();
+
+  $items['login'] = array(
+    'title' => 'Login',
+    'page callback' => 'druedu_layout_alter_login',
+    'file' => 'druedu_layout_alter.pages.inc',
+    'access callback' => TRUE,
+  );
+
+  $items['admin/config/druedu/druedu_layout_alter_configure'] = array(
+    'title' => 'Druedu Layout - Configuration',
+    'description' => 'Configuration of the Druedu Layout.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('druedu_layout_config_form'),
+    'access arguments' => array('access administration pages'),
+    'file' => 'druedu_layout_alter.admin.inc',
+  );
+
+  //call from a node edit form
+  $items['node/%node/delete/nojs'] = array(
+    'title' => 'Delete',
+    'page callback' => 'druedu_layout_alter_modal_node_delete',
+    'page arguments' => array(1, 3),
+    'access callback' => 'node_access',
+    'access arguments' => array('delete', 1),
+    'weight' => 0,
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'druedu_layout_alter.pages.inc',
+  );   
+  $items['node/%node/delete/ajax'] = array(
+    'delivery callback' => 'ajax_deliver',
+  ) + $items['node/%node/delete/nojs'];
+
+  //call from a views
+  $items['views/node/%node/delete/nojs'] = array(
+    'title' => 'Delete',
+    'page callback' => 'druedu_layout_alter_modal_node_delete',
+    'page arguments' => array(2, 4),
+    'access callback' => 'node_access',
+    'access arguments' => array('delete', 2),
+    'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
+    'file' => 'druedu_layout_alter.pages.inc',
+  );   
+  $items['views/node/%node/delete/ajax'] = array(
+    'delivery callback' => 'ajax_deliver',
+  ) + $items['views/node/%node/delete/nojs'];
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_init().
+ * redirect user anonymous if not logged to the loggin page
+ */
+function druedu_layout_alter_init(){
+  global $user;
+  $args = arg();
+  if($user->uid == 0 && $args[0] != 'login') {
+    drupal_goto('login', array('query' => drupal_get_destination()));
+  }
+  // $items['user/%user/edit']['title'] = 'Edit';
+  // $items['user/%user/useractivity']['title'] = 'User activity';
+  if(arg(0) == 'user' && is_numeric(arg(1)) ){
+    switch (arg(2)) {
+      case 'edit':
+        drupal_set_title('Edit');
+        break;
+      case 'useractivity':
+        drupal_set_title('User activity');
+        break;
+      case 'preferences':
+        drupal_set_title('Preferences');
+        break;
+      default:
+        # code...
+        break;
+    }
+  }
+
+
+}
+
+/**
+ * Implementation of hook_form_user_login_alter().
+ * add a new callback to redirect user anonymous after be identify
+**/
+function druedu_layout_alter_form_user_login_alter(&$form, &$form_state) {
+  $form['#submit'][] = 'druedu_layout_alter_login_redirect';
+}
+
+/**
+ * Callback function to redirect user anonymous after be identify
+ * this function override the defauult behavior to redirect user to the homepage (or user profile page) by the page they are arrived on the website
+**/
+function druedu_layout_alter_login_redirect(&$form, &$form_state) {
+  if(!empty($_GET['destination'])) {
+    $redirect = $_GET['destination'];
+    $form_state['redirect'] = $redirect;
+  }
+}
+
+/*
+* Implements HOOK_block_info
+*/
+//Blocks definition
+function druedu_layout_alter_block_info() {
+// takes the local tasks and put it in a block
+  $blocks['menu_local_task'] = array(
+    'info' => t('Menu local tabs'),
+    'cache' => DRUPAL_NO_CACHE, //to be confirmed
+  );
+// takes some fields from nodes and put it in a block
+  $blocks['content_information'] = array(
+    'info' => t('Content information'),
+    'cache' => DRUPAL_NO_CACHE, //to be confirmed
+  );
+
+// takes user pictures from user profile and put it in a block
+  $blocks['user_picture'] = array(
+    'info' => t('User picture'),
+    'cache' => DRUPAL_NO_CACHE, //to be confirmed
+  );
+
+  return $blocks;
+}
+
+/*
+* Implements HOOK_block_view
+*/
+//This is where we gather the elements from the node object (the tabs buttons) and include them in the block
+function druedu_layout_alter_block_view($delta = '') {
+  $block = array();
+  switch ($delta) {
+    case 'menu_local_task':
+      $menu_local_tasks = menu_local_tasks();
+      $block['title'] = NULL;
+        //Do not call menu_primary_local_tasks or menu_secondary_local_tasks because it does not output single item...
+      $block['content'] = $menu_local_tasks['tabs']['output'];
+    break;
+    case 'content_information':
+      $nodeFields = RenderNodeFields::getInstance();
+      $content_information = $nodeFields::get_content_information();
+      $block['title'] = NULL;
+      $block['content'] = (!empty($content_information)) ? drupal_render($content_information) : NULL;
+      break;
+    case 'user_picture':
+      $block['title'] = NULL;
+      if(arg(0)=='user'){
+          $account = user_load(arg(1));
+          if($account->uid){
+            $user = $account;
+          }
+      }
+      if(!isset($user->uid)){
+            global $user;
+      } 
+      $style = 'group-pictures';
+        $block['content'] =  (!empty($user->picture)) ? theme('image_style', array('style_name' => $style, 'path' => $user->picture->uri)) : theme('image_style', array('style_name' => $style, 'path' => variable_get('user_picture_default')));
+    }
+    return $block;
+}
+
+
+/*
+* Implements HOOK_user_view
+*/
+//@see druedu_preprocess_user_profile
+function druedu_layout_alter_user_view($account, $view_mode, $langcode) {
+  //user page
+
+  if($view_mode == 'full') {
+    //create a instance of RenderNodeFields
+    $userFields = RenderUserFields::getInstance();
+    //content_information is $node_content less $temp field, all fields we doesn't want display on the main content region
+    $user_information['account'] = $account;
+    $user_information['user_picture'] = '';
+    template_preprocess_user_picture($user_information);
+    $user_information = $user_information['user_picture'];
+    //set $content_information to the instance of RenderNodeFields
+    $userFields::set_user_information($user_information);
+  }
+
+  //hide other groups in user page except grade groups.
+  $og_user_group_ref = $account->content['og_user_group_ref'];
+
+  foreach (element_children($og_user_group_ref) as $key => $value) {
+    # code...
+    unset($account->content['og_user_group_ref'][$key]);
+  }
+  foreach ($account->og_user_group_ref[LANGUAGE_NONE] as $key => &$value) {
+    # code...
+    if($value['entity']->type == 'grade'){
+      $temp_account= array('#markup'=>$value['entity']->title);
+      array_unshift($account->content['og_user_group_ref'],$temp_account);
+      //unset($value[$key]);
+    }
+  }
+}
+/*
+* Implements HOOK_node_view
+*/
+function druedu_layout_alter_node_view($node, $view_mode) {
+  //create a instance of RenderNodeFields
+  $nodeFields = RenderNodeFields::getInstance();
+
+  //prepare a tempory array of data we want to display on the main content region
+  $temp = array();
+
+  if(isset($node->content['body'])){
+    //save body field
+    $temp['body'] = $node->content['body']; 
+    //remove of the $node->content
+    unset($node->content['body']);
+  }
+
+  if(isset($node->content['comments'])){
+    //save comments field
+    $temp['comments'] = $node->content['comments']; 
+    //remove of the $node->content
+    unset($node->content['comments']);
+  }
+
+  if(isset($node->content['links'])){
+    //save links field
+    $temp['links'] = $node->content['links']; 
+    //remove of the $node->content
+    unset($node->content['links']);
+  }
+  if(isset($node->content['og_roles_permissions'])){
+    unset($node->content['og_roles_permissions']);
+  }
+
+  //content_information is $node_content less $temp field, all fields we doesn't want display on the main content region
+  $content_information = $node->content;
+  //set $content_information to the instance of RenderNodeFields
+  $nodeFields::set_content_information($content_information);
+  //set $content_nid to the instance of RenderNodeFields
+  $nodeFields::set_nid($node->nid);
+
+  //Put back all fields on $node->content
+  foreach($temp as $field => $value) {
+    $node->content[$field] = $value;
+  }
+  //http://projects.crystal-asia.com/projects/bcis-education-groupware/tasks/398
+  //http://projects.crystal-asia.com/projects/bcis-education-groupware/tasks/387
+  drupal_set_title(t('!title', array('!title' => $node->title)), PASS_THROUGH);
+}
+
+/*
+* Implements HOOK_preprocess_block
+*/
+function druedu_layout_alter_preprocess_block(&$variables) {
+  //check if block machine name is "content_information"
+  if($variables['elements']['#block']->delta == 'content_information') {
+    //get a instance of RenderNodeFields
+    $nodeFields = RenderNodeFields::getInstance();
+    //create a instance of RenderNodeFields
+    $variables['content_information'] = $nodeFields::get_content_information();
+    //get $content_nid to the instance of RenderNodeFields
+    $nid = $nodeFields::get_nid();
+    //load current node object
+    $node = node_load($nid);
+    //load Author node object
+    $user = user_load($node->uid);
+    //create a variable of authoring information
+    $variables['authoring_info'] = array( 'user' => $user,
+    'date_created' => $node->created,
+    'date_updated' => $node->changed,
+    'published_date' => $node->published_at,
+    'status' => $node->status, );
+  }
+  if($variables['elements']['#block']->delta == 'subjects_units_title') {
+    $node = menu_get_object();
+    $tooltip = 'rel="tooltip" data-original-title="Click to toggle between subject"';
+    $variables['toggle_tooltip']['#value'] = $tooltip;
+    $variables['toggle_tooltip']['#class'] = 'toggle-subjects';
+    $variables['toggle_tooltip']['#bool'] = TRUE;
+    if ($node && $node->type == 'grade') {
+        $variables['toggle_tooltip']['#value'] = NULL;
+      $variables['toggle_tooltip']['#class'] = NULL;
+      $variables['toggle_tooltip']['#bool'] = FALSE;
+    }
+    
+  }
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function druedu_layout_alter_menu_alter(&$items) {
+  //ajax_comment_module
+  $items['ajax_comments/delete/%']['page callback'] = 'druedu_layout_alter_ajax_comments_delete';
+
+  $basic_weight = $items['user/%user/view']['weight'];
+  $items['user/%user/edit']['weight'] = $items['user/%user/view']['weight'] + 1;
+  // swap two menus(blog & activity) example.
+  //puts blog after activity
+  // $temp_weight = isset($items['user/%user/blog']['weight'])?$items['user/%user/blog']['weight']:$basic_weight;
+  //  dpm($items);
+  // dpm($items['user/%user/activity']);
+  // if($items['user/%user/activity']['weight']<$temp_weight) {
+  //   $items['user/%user/activity']['weight'] = $temp_weight - $basic_weight + 1;
+  // }
+  // dpm($items['user/%user/blog']);
+
+
+  // show all the user local task menus until 20130114-1016.
+  // foreach ($items as $key => $item) {
+  //   if(preg_match('/^user\/%user\/.*/',$key)) {
+  //     dpm($key,$item['weight']);
+  //   }
+  // }
+  //////here is the results:
+  // 3 => user/%user/preferences
+  // 50 => user/%user/useractivity
+  // user/%user/messages
+  // user/%user/messages/%messaging_simple_message
+  // 10 => user/%user/notifications/content_thread
+  // 10 => user/%user/notifications/content_type
+  // 10 => user/%user/notifications/user_content
+  // user/%user/shortcuts
+  // 2 => user/%user/track/navigation
+  // 5 => user/%user/devel/token
+  // -10 => user/%user/view
+  // user/%user/cancel
+  // user/%user/cancel/confirm/%/%
+  // user/%user/edit
+  // 100 => user/%user/devel
+  // user/%user/devel/load
+  // 100 => user/%user/devel/render
+
+  //fix diff module diff_diffs_overview() 
+  //'%title' or '@title'  for <em class="placeholder">title</em>
+  //http://projects.crystal-asia.com/projects/bcis-education-groupware/tasks/387
+  $items['node/%node/revisions']['page callback'] = '_diff_diffs_overview4druedu';
+  $items['node/%node/revisions/list']['page callback'] = '_diff_diffs_overview4druedu';
+  //add title "'Content in '.$term->name" for term page.
+  $items['taxonomy/term/%taxonomy_term']['page callback'] = '_taxonomy_term_page4druedu';
+  //#422: user profile messages page breadcrumbs aslo has html tag.
+  //$items['user/%user/messages']['page callback'] = '_messaging_simple_user_page4druedu';
+
+}
+
+/**
+ * Menu callback - an overview table of older revisions.
+ * diff_diffs_overview() 
+ * Generate an overview table of older revisions of a node and provide
+ * an input form to select two revisions for a comparison.
+ * @see diff_diffs_overview()
+ */
+function _diff_diffs_overview4druedu($node) {
+  module_load_include('inc', 'diff', 'diff.pages');
+  drupal_set_title(t('Revisions for @title', array('@title' => $node->title)), PASS_THROUGH);
+  return drupal_get_form('diff_node_revisions', $node);
+}
+
+/**
+ * @see taxonomy_term_page() druedu_layout_alter_menu_alter()
+ * add title "'Content in '.$term->name" for term page.
+ */
+function _taxonomy_term_page4druedu($term) {
+  // If there is a menu link to this term, the link becomes the last part of
+  // the active trail, and the link name becomes the page title. Thus, we must
+  // explicitly set the page title to be the term title.
+  drupal_set_title('Content in '.$term->name);
+  $build['title'] = array(
+        '#prefix' => '<h1>',
+        '#markup' => t('Content in '.$term->name),
+        '#suffix' => '</h1>',
+        '#weight' => -20
+      );
+  // Build breadcrumb based on the hierarchy of the term.
+  $current = (object) array(
+    'tid' => $term->tid,
+  );
+  // @todo This overrides any other possible breadcrumb and is a pure hard-coded
+  //   presumption. Make this behavior configurable per vocabulary or term.
+  $breadcrumb = array();
+  while ($parents = taxonomy_get_parents($current->tid)) {
+    $current = array_shift($parents);
+    $breadcrumb[] = l($current->name, 'taxonomy/term/' . $current->tid);
+  }
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb = array_reverse($breadcrumb);
+  drupal_set_breadcrumb($breadcrumb);
+  drupal_add_feed('taxonomy/term/' . $term->tid . '/feed', 'RSS - ' . $term->name);
+
+  // Set the term path as the canonical URL to prevent duplicate content.
+  $uri = entity_uri('taxonomy_term', $term);
+  drupal_add_html_head_link(array('rel' => 'canonical', 'href' => url($uri['path'], $uri['options'])), TRUE);
+  // Set the non-aliased path as a default shortlink.
+  drupal_add_html_head_link(array('rel' => 'shortlink', 'href' => url($uri['path'], array_merge($uri['options'], array('alias' => TRUE)))), TRUE);
+
+  // Normally we would call taxonomy_term_show() here, but for backwards
+  // compatibility in Drupal 7 we do not want to do that (it produces different
+  // data structures and HTML markup than what Drupal 7 released with). Calling
+  // taxonomy_term_view() directly provides essentially the same thing, but
+  // allows us to wrap the rendered term in our desired array structure.
+  $build['term_heading'] = array(
+    '#prefix' => '<div class="term-listing-heading">',
+    '#suffix' => '</div>',
+    'term' => taxonomy_term_view($term, 'full'),
+  );
+
+  if ($nids = taxonomy_select_nodes($term->tid, TRUE, variable_get('default_nodes_main', 10))) {
+    $nodes = node_load_multiple($nids);
+    $build += node_view_multiple($nodes);
+    $build['pager'] = array(
+      '#theme' => 'pager',
+      '#weight' => 5,
+    );
+  }
+  else {
+    $build['no_content'] = array(
+      '#prefix' => '<p>',
+      '#markup' => t('There is currently no content classified with this term.'),
+      '#suffix' => '</p>',
+    );
+  }
+  return $build;
+}
+
+/**
+ * Implements hook_admin_path().
+ */
+function druedu_layout_alter_admin_paths_alter(&$paths) {
+  $paths['user/*/edit'] = FALSE;
+  $paths['users/*/edit'] = FALSE;
+  $paths['node/add/*'] = FALSE;
+}
+
+/*
+* Implements HOOK_preprocess_theme
+*/
+//Define to the template where is the default tpl file used by the node form
+function druedu_layout_alter_theme($existing, $type, $theme, $path) {
+  $content_types = node_type_get_types();
+
+  $base = array(
+    'node_form' => array(
+      'render element' => 'form',
+      'template' => 'node-form',
+      'pattern' => 'node_form__',
+      'path' => drupal_get_path('module', 'druedu_layout_alter')."/templates",
+    ),/* no tpl ,why this ?caluse the user edit page layout doesnot match. --guo
+    'user_profile_form' => array(
+        'render element' => 'form',
+        'template' => 'user-profile-form',
+        'pattern' => 'user_profile_form__',
+        'path' => drupal_get_path('module', 'druedu_layout_alter')."/templates",
+      ),*/
+    'modal_validation' => array(
+      'template' => 'modal-validation',
+      'arguments' => array('params' => null, 'options' => null),
+      'path' => drupal_get_path('module', 'druedu_layout_alter')."/templates",
+    ),
+    'druedu_homeapage' => array(
+      'template' => 'homepage',
+      'arguments' => array('params' => null),
+      'path' => drupal_get_path('module', 'druedu_layout_alter')."/templates",
+    ),
+  );
+  return $base;
+}
+/*
+* Implements HOOK_preprocess_node_form
+*/
+//Suggest to the template new tpl files. It can be used by the default node form or by other node type form.
+function druedu_layout_alter_preprocess_node_form(&$variables) {
+  $type = $variables['form']['#node']->type;
+//  $variables['theme_hook_suggestions'][] = 'node_form';
+  $variables['theme_hook_suggestions'][] = 'node_form__'.$type;
+  $variables['form']['other_settings']['#empty'] = TRUE;
+
+  if(isset($variables['form']['other_settings']['#groups'])) {
+    foreach ($variables['form']['other_settings']['#groups']['other_settings'] as $key => $field) {
+      if(is_array($field)) {
+        $variables['form']['other_settings']['#groups']['other_settings'][$key][LANGUAGE_NONE]['#title'] = NULL;
+        if(!isset($field['#access']) || (isset($field['#access']) && $field['#access'])) {
+          $variables['form']['other_settings']['#empty'] = FALSE;
+        }
+      }
+    }
+  }
+  $variables['form']['other_settings_plus']['#empty'] = TRUE;
+  if(isset($variables['form']['other_settings_plus']['#groups'])) {
+    foreach ($variables['form']['other_settings_plus']['#groups']['other_settings_plus'] as $key => $field) {
+      if(is_array($field)) {
+        $variables['form']['other_settings_plus']['#groups']['other_settings_plus'][$key][LANGUAGE_NONE]['#title'] = NULL;
+        if(!isset($field['#access']) || (isset($field['#access']) && $field['#access'] && ($field['#title'] != 'Menu settings' || $field['#title'] != 'URL path settings'))){
+          $variables['form']['other_settings_plus']['#empty'] = FALSE;
+        }
+      }
+    }
+  }
+  //add button
+  // $variables['form']['actions']['media'] = array(
+  //     '#markup' => t('My Media'), 
+  //     '#prefix' => '<a href="#filevault-modal" role="button" class="btn btn-success" data-toggle="modal"><i class="icon-picture"></i>',
+  //     '#suffix' => '</a>',
+  //     '#weight' => 18, 
+  //   );
+  /*@TODO popup when delete a node*/
+}
+
+/*
+* Implements HOOK_form_alter
+*/
+function druedu_layout_alter_form_alter(&$form, &$form_state, $form_id) {
+  $leave_verification_content_type = array('subject', 'grade', 'structure_unit', 'school_page');
+  $exclude_content_type = array('assignment_set', 'answer');
+
+  if(isset($form['#node_edit_form']) && $form['#node_edit_form']) {
+    if(in_array($form['type']['#value'], $leave_verification_content_type)) {
+      $jquery_code = "jQuery(document).ready(function($) {
+        window.btn_clicked = false;
+        $('.btn').click(function(event) {
+          window.btn_clicked = true;
+        });
+        // Let's not leave accidently now
+        $(window).bind('beforeunload', function() {
+          if (!window.btn_clicked) {
+            return '".t('Are you sure you want to leave?')."';
+          }
+        });
+      });";
+      drupal_add_js($jquery_code, 'inline');
+    }
+    $args = arg();
+    $nid = $args[1];
+    if(isset($form['body'])) {
+      $form['body'][LANGUAGE_NONE]['#after_build'][] = 'cleanup_formatting_area';
+    }
+    if(isset($form['actions']['delete'])) {
+      $form['actions']['delete']['#ajax'] = array(
+          'event' => 'click',
+          'path' => 'node/'.$nid.'/delete/ajax',
+      );
+      //$form['actions']['delete']['#type'] = 'button';
+      //unset($form['actions']['delete']['#submit']);
+      //drupal_add_js(array('destination' => 'home'), 'setting');
+      drupal_add_js(drupal_get_path('module', 'druedu_layout_alter') .'/js/delete_popup.js');
+    }
+
+    if(!in_array($form['type']['#value'], $exclude_content_type)) {
+      $other_settings_fields = array('field_keywords', 'revision_information', 'field_group_picture', 'group_access');
+      $special_case = array('field_date', 'field_attachments');
+      //URL SETTINGS DOESNT HAVE FIELD ON FORM, CHANGES ABOUT THIS FIELD ARE APLLIED ON PREPROCESS FORM NODE
+      //check if a form have additional_setting
+      if(isset($form['additional_settings'])) {
+        //add new vertical tabs
+        $form['additional_settings']['#type'] = 'fieldset';
+
+        $form['other_settings'] = $form['additional_settings'];
+        $form['other_settings_plus'] = $form['additional_settings'];
+        foreach($form as $key => $field) { 
+          if(is_array($field) && isset($field['#group']) && $field['#group'] == 'additional_settings') {
+            $form[$key]['#group'] = 'other_settings_plus';
+            $form[$key]['#collapsed'] = TRUE;
+            $form[$key]['#collapsible'] = TRUE;
+          }
+          if(is_array($field) && (preg_match('/^og_/', $key) || strstr($key,'field_') || preg_match('/^group_/', $key)) && !in_array($key , $special_case)) {
+            (isset($form[$key][LANGUAGE_NONE]['#required']) && $form[$key][LANGUAGE_NONE]['#required']) ? $required = '  <span class="summary">('.t('Field required').')</span>' : $required = '';
+            $form[$key]['#type'] = 'fieldset';
+            if(isset($form[$key][LANGUAGE_NONE]['#title'])) {
+              $form[$key]['#title'] = $form[$key][LANGUAGE_NONE]['#title']. $required;
+            }
+            elseif(isset($form[$key][LANGUAGE_NONE][0]['#title'])) {
+              $form[$key]['#title'] = $form[$key][LANGUAGE_NONE][0]['#title']. $required;
+              $form[$key][LANGUAGE_NONE][0]['#title'] = NULL;
+            }
+            else {
+              $form[$key]['#title'] = t('No title field found.'). $required;
+            }
+            $form[$key]['#collapsible'] = TRUE;
+            $form[$key]['#collapsed'] = (empty($required)) ? TRUE : FALSE;
+            $form[$key]['#group'] = (empty($required)) ? 'other_settings_plus' : 'other_settings' ;
+            //$form[$key]['#required'] = (!empty($required)) ? TRUE : FALSE ;
+          }
+        }
+        //special case we want on additional setting tab
+        $count_other_settings_fields = 0;
+        foreach($other_settings_fields as $field) {
+          if(isset($form[$field])) {
+            $form[$field]['#group'] = 'other_settings';
+            $form[$field]['#collapsed'] = (!$count_other_settings_fields || (isset($form[$field][LANGUAGE_NONE]) && isset($form[$field][LANGUAGE_NONE]['#required']) && $form[$field][LANGUAGE_NONE]['#required'])) ? FALSE : TRUE;
+            $count_other_settings_fields += 1;
+          }
+        }
+      }
+    }
+    //Check if have content on tabs
+    foreach ($form['additional_settings'] as $key => $value) {
+      # code...
+    }
+  }
+}
+
+/*
+* Implements HOOK_form_alter
+*/
+function druedu_layout_alter_form_node_delete_confirm_alter(&$form, &$form_state) {
+  $form['description']['#markup'] = t('You will delete this content permanently');
+  $args = arg(); 
+  $form['actions']['#prefix'] = '<div class="buttons action">';
+  $form['actions']['#suffix'] = '</div>';
+  $current_path = current_path();
+  if(strstr($current_path, 'ajax')) {
+    $form['actions']['cancel'] = array(
+      '#type' => 'button',
+      '#value' => t('Cancel'),
+      '#weight' => 1,
+    );
+  }else {
+    $form['actions']['cancel']['#options']['attributes']['class'] = array('btn');
+  }
+  if($args[0] == 'views') {
+      $node = $form_state['build_info']['args']['0'];
+      $form['actions']['submit']['#attributes'] = array('class' => array('btn', 'btn-danger'));
+      $form['actions']['submit']['#ajax'] = array(
+        'callback' => 'druedu_layout_alter_ajax_node_delete_js',
+        'wrapper' => 'view-wrapper-'.$node->nid,
+        'method' => 'replace',
+        'effect' => 'fade',
+        'progress' => array('type' => 'throbber', 'message' => NULL),
+      );
+      $form['node_id'] = array('#type' => 'hidden', '#value' => $node->nid);
+      unset($form['#submit']);
+  }
+}
+
+/*
+* Implements HOOK_form_alter
+*/
+function druedu_layout_alter_form_comment_confirm_delete_alter(&$form, &$form_state, $form_id) {
+  $form['description']['#markup'] = t('You will delete this comment permanently');
+  $form['actions']['#prefix'] = '<div class="buttons action">';
+  $form['actions']['#suffix'] = '</div>';
+  $form['actions']['cancel'] = array(
+    '#type' => 'button',
+    '#value' => t('Cancel'),
+  );
+  $form['actions']['cancel']['#options']['attributes']['class'] = array('btn');
+
+  //alter default behavior of ajax_comment_module
+  $form['actions']['submit']['#ajax']['callback'] = 'druedu_layout_alter_ajax_comments_delete_js';
+  $form['actions']['submit']['#ajax']['progress']['type'] = 'throbber';
+  $form['actions']['submit']['#ajax']['progress']['message'] = NULL;
+
+  unset($form['actions']['cancel']['#attributes']['onclick']);
+}
+
+/**
+ * Removes the node on views.
+ */
+function druedu_layout_alter_ajax_node_delete_js($form, &$form_state) {
+  $nid = $form_state['input']['node_id'];
+  $node = node_load($nid);
+  node_delete($nid);
+  $commands[] = ajax_command_before('#main-menu', theme('status_messages'));
+  $commands[] = ajax_command_invoke(NULL, 'hideModal');
+  //special for answer del ,update the views,to see 6-1 answers.
+  
+  watchdog('nid', $nid, array(), WATCHDOG_NOTICE, 'link');
+  if($node->type == 'answer') {
+    $question_nid = $node->field_answer[LANGUAGE_NONE][0]['target_id'];
+
+  
+    //system/ajax bug fix.
+    $_GET['destination']='node/'.$question_nid->nid;
+    $views = views_embed_view('question','answers_attachment',$question_nid);
+    $question = node_load($question_nid);
+    $commands[] = ajax_command_remove('.view-display-id-answers_attachment .attachment-before');
+    watchdog('field_computed_answers', $question->field_computed_answers[LANGUAGE_NONE][0]['value'], array(), WATCHDOG_NOTICE, 'link');
+    if($question->field_computed_answers[LANGUAGE_NONE][0]['value']){
+       watchdog('2question_nid', $question_nid, array(), WATCHDOG_NOTICE, 'link');
+       $commands[] = ajax_command_remove('.view-display-id-answers_attachment .attachment-before');
+       $views = '<div class="attachment attachment-before">
+      <h3>'.format_plural($question->field_computed_answers[LANGUAGE_NONE][0]['value'], '1 answer', '@count answers').'</h3>    </div>'.$views;
+    }
+    $commands[] = ajax_command_invoke(NULL, 'disableSubmitButton');
+    $commands[] = ajax_command_html('#answers',   $views);
+  }else{
+    $commands[] = ajax_command_remove('.view-wrapper-' . $nid);
+  }
+  return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+/**
+ * Removes the comment.
+ */
+function druedu_layout_alter_ajax_comments_delete_js($form, &$form_state) {
+  $comment = $form['#comment'];
+  $commands[] = ajax_command_before('#main-menu', theme('status_messages'));
+  $commands[] = ajax_command_invoke(NULL, 'hideModal');
+  $commands[] = ajax_command_remove('#comment-wrapper-' . $comment->cid);
+  $commands[] = ajax_command_invoke(NULL, 'checkhasComment', array('#comments-wrapper-' . $comment->nid));
+  return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function druedu_layout_alter_form_comment_form_alter(&$form, &$form_state, $form_id){
+// Check to see if this node type uses ajax comments.
+  if (!ajax_comments_node_type_active($form['#node']->type)) {
+    return;
+  }
+  drupal_add_js(drupal_get_path('module', 'druedu_layout_alter') . '/js/delete_popup.js');
+  //#380: Comment form: remove "Your name".
+  unset($form['author']['_author']);
+  $form['subject']['#access'] = FALSE;
+  //dpm($form);
+}
+
+
+/**
+ * Callback for clicking "delete".
+ */
+function druedu_layout_alter_ajax_comments_delete($cid) {
+  global $base_url;
+  if (!($comment = comment_load($cid))) {
+    return MENU_NOT_FOUND;
+  }
+  // Need to include comment module admin file for delete form.
+  $form_state = array();
+  $form_state['build_info']['args'] = array($comment);
+
+  // Load this using form_load_include so it's cached properly and works in the
+  // ajax callback.
+  form_load_include($form_state, 'inc', 'comment', 'comment.admin');
+  $form = drupal_build_form('comment_confirm_delete', $form_state);
+
+  /* AJAX RENDER */
+  $form['#action'] = $base_url.'/comment/'.$cid.'/delete';
+  $commands = array();   
+  $commands[] = ajax_command_append('body', theme('modal_validation', array('params' => $form)));
+  $commands[] = ajax_command_invoke(NULL, 'prepareModal');
+
+  return array('#type' => 'ajax', '#commands' => $commands);
+}
+
+function druedu_layout_alter_form_bulletins_node_form_alter(&$form, &$form_state, $form_id) {
+  if(isset($form['field_date']) && !empty($form['field_date'][$form['field_date']['#language']])) {
+    foreach ($form['field_date'][$form['field_date']['#language']] as $key => $value) {
+      if(is_int($key)) {
+        unset($form['field_date'][$form['field_date']['#language']][$key]['#title']);
+      }
+    }
+  }
+}
+
+function druedu_layout_alter_views_post_render(&$view, &$output, &$cache) {
+  if (isset($view->field['delete_node'])) {
+    drupal_add_library('system', 'drupal.ajax');
+    drupal_add_js(array('destination' => current_path()), 'setting');
+    drupal_add_js(drupal_get_path('module', 'druedu_layout_alter') .'/js/delete_popup.js');
+    }
+
+}
+
+//Afterbuild callback for the body field - allows to clean the foramtting tips area
+function cleanup_formatting_area(&$form) {
+  $form[0]['format']['#attributes'] = array('style' => 'display: none;');
+  $form[0]['format']['help']['#access'] = FALSE; // Note LANGUAGE_NONE, you may need to set your comment form language code instead   
+  return $form;
+}
+
+
+/**
+* Implements HOOK_menu_local_tasks_alter().
+*/
+// Add action links on 'node/add/node-type', 'node/%' and 'node/%/edit' pages.
+function druedu_layout_alter_menu_local_tasks_alter(&$data, $router_item, $root_path) {
+  $root_paths = array('node/%','node/%/edit','comment/reply/%');
+  //hide link revision if no access
+  if(in_array($root_path, $root_paths) && !user_access('access revisions page')) {
+    foreach ($data['tabs'][0]['output'] as $key => $local_task) {
+      if($local_task['#link']['path'] == 'node/%/revisions') {
+        unset($data['tabs'][0]['output'][$key]);
+        break;
+      }
+    }
+  }
+  $type = '';
+  $node_add_path = 'node/add';
+    foreach($router_item['page_arguments'] as $arg) {
+    if(isset($arg->type)) {
+      $type = str_replace('_','-',$arg->type);
+      $root_paths[] = 'node/add/'.$type;
+      $node_add_path .= '/'.$type;
+      break;
+    }
+    if(in_array($arg, array_keys(node_type_get_types()))) {
+      $type = str_replace('_','-',$arg);
+      $root_paths[] = 'node/add/'.$type;
+      $node_add_path .= '/'.$type;
+      break;
+    }
+  }
+  if(in_array($root_path, $root_paths)) {
+    add_node_add_menu_item($data, $node_add_path);
+  }
+
+  //Reinitialisation of node/add path for other cases
+  $node_add_path = 'node/add';
+  //Case-by-case menu addition
+  switch($type) {
+    case 'subject':
+        $node_add_path .= '/structure-unit';
+        add_node_add_menu_item($data, $node_add_path);
+      break;
+    case 'grade':
+        $node_add_path .= '/subject';
+        add_node_add_menu_item($data, $node_add_path);
+      break;
+    case 'bulletins':
+        $node_add_path .= '/bulletins';
+        add_node_add_menu_item($data, $node_add_path);
+        break;
+        // for view named single_question_page,it has type
+    case 'question':
+        $node_add_path .= '/question';
+        add_node_add_menu_item($data, $node_add_path);
+        break;
+    case 'event':
+        $item = menu_get_item('calendar');
+        if ($item['access']) {
+          $item['title'] = 'Back to calendar';
+          if(empty($data['tabs'])) {
+            $data['tabs'][] = array('count' => 0, 'output' => array());
+          }
+            $added_item =array(
+              '#theme' => 'menu_local_task',
+              '#link' => $item,
+            ); 
+            if(!in_array($added_item, $data['tabs'][0]['output'])){
+              $data['tabs'][0]['output'][] = $added_item;
+              $data['tabs'][0]['count']++;
+            }
+        }
+        break;
+  }
+  // If I have no content type $type setup (because I am on a View) AND I am on my Q&A View, I know it because it's in my page_arguments 
+  //(Check the View only, we want all the displays)
+  //there are three display named:page_questions_list page_my_questions page_unanswered_questions,
+  //$questions_display = array('page_questions_list','page_my_questions','page_unanswered_questions');
+  if(!$type && in_array('questions', $router_item['page_arguments'])) {//count(array_intersect($questions_display,$router_item['page_arguments'])) ){
+    $node_add_path = 'node/add/question';
+    add_node_add_menu_item($data, $node_add_path);
+  }
+  if(!$type && in_array('calendar', $router_item['page_arguments'])) {
+    $node_add_path = 'node/add/event';
+    add_node_add_menu_item($data, $node_add_path);
+  }
+  //dpm($router_item['page_arguments']);
+  /**
+   * add user/blog to user profile menu_local_task.
+   */
+  // dpm($data);
+  // foreach ($data['tabs'][0]['output'] as $key => $value) {
+  //   $order = array('user/%/blog','node/add/blog');
+  //   $hidden = array('user/%/shortcuts');
+  //   // foreach ($order as $key => $path) {
+  //   //   foreach ($data['tabs'][0]['output'] as $key => $value) {
+  //   //     if()
+  //   //   }
+  //   //   $temp_link[$key] = $value['#link'][''];
+  //   // }
+  // }
+
+}
+/**
+ * Helper function to add a "Add [content type name]" menu item pointing to 'node/add/node-type'
+ *
+ */
+function add_node_add_menu_item(&$data, $node_add_path, $weight=0) {
+  $item = menu_get_item($node_add_path);
+  if ($item['access']) {
+    if($node_add_path == 'node/add/question') {
+      $item['title'] = t('Ask'). ' '. $item['title']; //fit for design words..
+    } else {
+      $item['title'] = t('Add'). ' '. $item['title'];
+    }
+    if(empty($data['tabs'])) {
+      $data['tabs'][] = array('count' => 0, 'output' => array());
+    }
+     $item['weight'] = $weight;
+      $added_item =array(
+        '#theme' => 'menu_local_task',
+        '#link' => $item,
+      ); 
+      if(!in_array($added_item, $data['tabs'][0]['output'])){
+        $data['tabs'][0]['output'][] = $added_item;
+        $data['tabs'][0]['count']++;
+      }
+  }
+}
+
+function druedu_layout_alter_views_pre_render(&$view) {
+  if(isset($view->field['nid'])) {
+    $view->style_plugin->options['row_class'] .= ' view-wrapper-[nid]';
+  }
+  //order grade in groups page.
+  // if($view->name =='og_user_groups' && $view->current_display == 'user_group_page'){ 
+  //    foreach ($view->result as $key => $item) {
+  //     $order = str_replace('Grade','',$item->node_og_membership_title);
+  //     $order = (int) trim($order);
+  //     if($item->node_og_membership__field_data_field_group_category_field_gr == 'private') {
+  //       $privates[$order] = $item;
+  //     }else{
+  //       $public[] = $item;
+  //     }
+  //     //unset($view->result[$key]);
+  //    }
+  //   unset($view->result); 
+   
+  //   ksort($privates);
+  //   foreach ($public as $key => $value) {
+  //     array_push($privates, $value);
+  //   }
+  //   $view->result = $privates;
+  //  }
+}
+
+/*
+* this function alter layout of the sidebars, it's called on template.php of the theme
+*/
+function _druedu_layout_alter_sidebars() {
+  //TRUE means show and FALSE mean hidden
+  $sidebars = array('left' => TRUE, 'right' => FALSE);
+  //get current path
+  $current_path = current_path();
+  $is_config = FALSE;
+  //settings from admin part (path : admin/config/druedu_layout_alter/configure)
+  $druedu_layout_config = variable_get('druedu_layout_config');
+  //look if the current path is a custom path configured on admin part 
+  if(isset($druedu_layout_config['path'])) {
+    foreach($druedu_layout_config['path'] as $key => $path) {
+      //if is match and configuration is forced
+      if(drupal_match_path($current_path, $path['path']) && !$druedu_layout_config['path'][$key]['status']) {
+          $sidebars['left'] = $druedu_layout_config['path'][$key]['left'];
+          $sidebars['right'] = $druedu_layout_config['path'][$key]['right'];
+          $is_config = TRUE;
+          break;
+      }
+    }
+  }
+  //if is configured on admin part for this path return config
+  if($is_config) {
+    return $sidebars;
+  }
+  else {
+    $user_preferences = FALSE;
+    $node = menu_get_object();
+    $views_page = views_get_page_view();
+    //check if we are on node page
+    if(node_is_page($node)) {
+      //check is this node type is configured on admin part and and configuration is forced
+      if(array_key_exists($node->type, $druedu_layout_config['node']) && !$druedu_layout_config['node'][$node->type]['status']) {
+        $sidebars['left'] = $druedu_layout_config['node'][$node->type]['left'];
+        $sidebars['right'] = $druedu_layout_config['node'][$node->type]['right'];
+        return $sidebars;
+      }
+      $user_preferences = TRUE;
+    }
+    //check if We are on views page
+    elseif(is_object($views_page)) {
+      $name = $views_page->name.'-/-'.$views_page->current_display;
+      //check is this view name and display is configured on admin part and and configuration is forced
+      if(array_key_exists($name, $druedu_layout_config['views']) && !$druedu_layout_config['views'][$name]['status']) {
+        $sidebars['left'] = $druedu_layout_config['views'][$name]['left'];
+        $sidebars['right'] = $druedu_layout_config['views'][$name]['right'];
+        return $sidebars;
+      } 
+      $user_preferences = TRUE;
+    }
+    if($user_preferences) {
+      //user configuration
+      global $user;
+      module_load_include('inc', 'druedu_user', 'druedu_user.pages');
+      $user_preferences = druedu_get_user_preferences($user->uid);
+      $user_preferences = json_decode($user_preferences['preferences']);
+      $sidebars['right'] = (!empty($user_preferences) && isset($user_preferences->sidebar_right)) ? $user_preferences->sidebar_right : TRUE; 
+      $sidebars['left'] = (!empty($user_preferences) && isset($user_preferences->sidebar_left)) ? $user_preferences->sidebar_left : TRUE;
+      return $sidebars;
+    }
+  }
+  return $sidebars;
+}
+
+//widget check all checkboxes
+function druedu_layout_alter_field_widget_form_alter(&$element, &$form_state, $context) {
+  //aray of field name to add checkboxes
+  $field_check_all = array('field_bulletins_groups_audience');
+  if(isset($element['#field_name']) && in_array($element['#field_name'], $field_check_all) && isset($element['#type']) && $element['#type'] == 'checkboxes') {
+    $field_name = str_replace('_', '-', $element['#field_name']);
+    drupal_add_js(array('field_name' => $field_name), 'setting');
+    $element['#attached']['js'][] = drupal_get_path('module', 'druedu_layout_alter') .'/js/check_all_checkboxes.js';
+  }
+}
+/**
+ * Implements hook_field_attach_view_alter().
+ * #359: taxonomy: don't output them as links IB school and BCIS school in Grade
+ */
+function druedu_layout_alter_field_attach_view_alter(&$output, $context) {
+  foreach (element_children($output) as $field_name) {
+    $special_fields = array('field_ib_programme','field_bcis_school');
+    if(in_array($field_name, $special_fields)) {
+      $element = &$output[$field_name];
+      foreach (element_children($element) as $key => $value) {
+         $element[$key]['#type'] = 'markup';
+         $element[$key]['#markup'] = $element[$key]['#title'];
+      }
+    }
+
+  }
+}
+/**
+ * Implements hook_form_FORM_ID_alter().
+ * for path auto 
+ * add alias to node/add/%type
+ */
+function druedu_layout_alter_form_pathauto_bulk_update_form_alter(&$form, &$form_state, $form_id) {
+  $form['#submit'][] = 'druedu_node_add_alias_update';
+}
+function druedu_layout_alter_form_pathauto_admin_delete_alter(&$form, &$form_state, $form_id) {
+  $form['#submit'][] = 'druedu_node_add_alias_update';
+}
+function druedu_node_add_alias_update(){
+  node_type_cache_reset();
+  foreach (node_type_get_types() as $type) {
+    $type_url_str = str_replace('_', '-', $type->type);
+    $path = array('source'=>'node/add/' . $type_url_str,'alias' =>'add_' . $type_url_str);
+    path_delete($path);
+    path_save($path);
+  }
+}
+
+
+/**
+ * Implements hook_node_type_insert().
+ */
+function druedu_layout_alter_node_type_insert($info) {
+   $type_url_str = str_replace('_', '-', $info->type);
+   $path = array('source'=>'node/add/' . $type_url_str,'alias' =>'add_' . $type_url_str);
+   path_save($path);
+}
+/**
+ * Implements hook_node_type_delete().
+ */
+function druedu_layout_alter_node_type_delete($info) {
+   $type_url_str = str_replace('_', '-', $info->type);
+   $path = array('source'=>'node/add/' . $type_url_str,'alias' =>'add_' . $type_url_str);
+   path_delete($path);
+}
+/**
+ * Implements hook_node_type_update().
+ */
+function druedu_layout_alter_node_type_update($info) {
+  if (!empty($info->old_type) && $info->old_type != $info->type) {
+   $type_url_str = str_replace('_', '-', $info->old_type);
+   $path = array('source'=>'node/add/' . $type_url_str,'alias' =>'add_' . $type_url_str);
+   path_delete($path);
+   $type_url_str = str_replace('_', '-', $info->type);
+   $path = array('source'=>'node/add/' . $type_url_str,'alias' =>'add_' . $type_url_str);
+   path_save($path);
+  }
+}
+
+/**
+ * Implements hook_node_insert().
+ * @param <type> $node
+ */
+function druedu_layout_alter_node_insert($node) {
+  $options = array('language' => pathauto_entity_language('node', $node));
+
+
+  module_load_include('inc', 'pathauto');
+  $uri = entity_uri('node', $node);
+  pathauto_create_alias('node', $op='insert', $uri['path'], array('node' => $node), $node->type, $options['language']);
+
+  //special acitivity for answer.
+  $node_title = l($node->title, 'node/'. $node->nid);
+  $node_type = $node->type;
+  if ($node->type == 'answer') {
+    $node_type = $node_type .' for';
+    if (isset($node->field_answer)) {//make sure and make sure...
+      $question = node_load($node->field_answer[LANGUAGE_NONE][0]['target_id']);
+      $node_title = l($question->title, 'node/'. $question->nid);
+    }
+  }
+
+  heartbeat_api_log('heartbeat_add_node', $node->uid, 0, $node->nid, 0, array(
+    '!node_title' => $node_title,
+    '!username'=> l(user_load($node->uid)->name, 'user/'. $node->uid),
+    '!node_type' => $node_type,
+    '!types' => $node->type .'s'
+  ), HEARTBEAT_PUBLIC_TO_ALL, $node->created);
+
+}
+/**
+ * Implements hook_node_update().
+ * @param <type> $node
+ */
+function druedu_layout_alter_node_update($node) {
+  
+  $options = array('language' => pathauto_entity_language('node', $node));
+
+  module_load_include('inc', 'pathauto');
+  $uri = entity_uri('node', $node);
+  pathauto_create_alias('node', $op='insert', $uri['path'], array('node' => $node), $node->type, $options['language']);
+  // if add an answer,we update the question ,but please not record this activity.
+  if ($node->type == 'question' && $node->field_answers != $node->original->field_answers) {
+    return;
+  }
+  heartbeat_api_log('heartbeat_edit_node', $node->uid, 0, $node->nid, 0, array(
+    '!node_title' => l($node->title, 'node/'. $node->nid),
+    '!username'=> l(user_load($node->uid)->name, 'user/'. $node->uid),
+    '!node_type' => $node->type,
+    '!types' => $node->type .'s'
+  ), HEARTBEAT_PUBLIC_TO_ALL);
+
+}
+/**
+ * Implements hook_comment_insert().
+ */
+function druedu_layout_alter_comment_insert($comment) {
+  //special acitivity for answer.
+  $node = node_load($comment->nid);
+  $node_title = l($node->title, 'node/'. $node->nid);
+  $node_type = $node->type;
+  if ($node->type == 'answer') {
+    if (isset($node->field_answer)) {//make sure and make sure...
+      $question = node_load($node->field_answer[LANGUAGE_NONE][0]['target_id']);
+      //username added a comment to an Answer of %node_title%
+      //username added a comment to %node_title%
+      //<span>!username added a comment to !title:</span><blockquote><div>!comment</div></blockquote>
+      $node_title = ' an Answer of '.l($question->title, 'node/'. $question->nid);
+    }
+  }
+
+
+
+  heartbeat_api_log('heartbeat_add_comment', $comment->uid, 0, $comment->nid, 0, array(
+   
+    '!username'=> l(user_load($comment->uid)->name, 'user/'. $comment->uid),
+    '!title' => $node_title,
+    '!comment' => $comment->subject.'<br />'.drupal_render($comment->comment_body)
+  ), HEARTBEAT_PUBLIC_TO_ALL);
+}
+
+/**
+ * Implements hook_user_update().
+ */
+function druedu_layout_alter_user_update(&$edit, $account, $category) {
+  heartbeat_api_log('heartbeat_edit_account', $account->uid, 0, 0, 0, array('!username'=> l($account->name, 'user/'. $account->uid),
+  ), HEARTBEAT_PUBLIC_TO_ALL);
+}

@@ -1,0 +1,12 @@
+name =  druedu Q&A
+description = druedu Q&A core
+core = 7.x
+package = Druedu
+version = "7.x-1.x-dev"
+dependencies[] = flag
+dependencies[] = ajax_comments
+dependencies[] = simplehtmldom
+dependencies[] = entityreference
+dependencies[] = computed_field
+dependencies[] = rate
+

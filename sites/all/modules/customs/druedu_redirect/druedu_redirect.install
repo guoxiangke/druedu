@@ -1,0 +1,8 @@
+<?php
+/**
+ * Implements hook_uninstall().
+ */
+function druedu_redirect_uninstall() {
+  variable_del('druedu_redirect_settings');
+}
+?>

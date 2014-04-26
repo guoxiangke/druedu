@@ -1,0 +1,7 @@
+name = Druedu Pre-populate 
+description = Helper to pre-populate forms
+core = 7.x
+package = Druedu
+version = "7.x-1.x-dev"
+dependencies[] = druedu_subject
+dependencies[] = druedu_context

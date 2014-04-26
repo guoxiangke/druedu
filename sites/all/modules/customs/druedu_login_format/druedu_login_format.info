@@ -1,0 +1,5 @@
+name = Druedu Login Format 
+description = Enforce users to use a login anme with a specific format
+core = 7.x
+package = Druedu
+version = "7.x-1.x-dev"

@@ -1,0 +1,7 @@
+name = Druedu user Control Access
+description = Add permissions depending of user and these OG groups
+core = 7.x
+package = Druedu
+version = "7.x-1.x-dev"
+;dependencies[] = druedu_user
+dependencies[] = og_access

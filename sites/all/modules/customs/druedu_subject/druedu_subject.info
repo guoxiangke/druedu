@@ -1,0 +1,9 @@
+name = Druedu Subject
+description = Defines a subject in Druedu
+dependencies[] = views
+core = 7.x
+package = Druedu
+version = "7.x-1.x-dev"
+dependencies[] = og_context
+dependencies[] = og
+dependencies[] = druedu_context
